@@ -48,3 +48,14 @@ qc search ents "百度" --source qcc --source aiqicha
 go run ./cmd/qc --help
 go test ./...
 ```
+
+## 发布
+
+推送语义化版本标签后，GitHub Actions 会构建 macOS、Linux 和 Windows 的 amd64、arm64 版本，并将压缩包和校验文件发布到 GitHub Release：
+
+```console
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+手动运行 `Release` workflow 只执行 snapshot 构建，不会创建 GitHub Release，可用于验证发布配置。

@@ -3,8 +3,8 @@ package cli
 import (
 	"context"
 
-	"github.com/edram/qc/internal/aiqicha"
-	"github.com/edram/qc/internal/models"
+	"github.com/edram/qi/internal/aiqicha"
+	"github.com/edram/qi/internal/models"
 )
 
 const searchSourceAiqicha searchSourceName = "aiqicha"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/edram/qc/internal/models"
+	"github.com/edram/qi/internal/models"
 )
 
 type searchSourceName string

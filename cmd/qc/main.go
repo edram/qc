@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/edram/qc/internal/cli"
+	"github.com/edram/qi/internal/cli"
 )
 
 func main() {

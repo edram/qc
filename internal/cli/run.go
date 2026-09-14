@@ -16,6 +16,7 @@ func Execute(args []string, stdout, stderr io.Writer) int {
 		kong.Description("Query Chinese enterprise information from the command line."),
 		kong.UsageOnError(),
 		kong.Writers(stdout, stderr),
+		kong.Vars(versionVars()),
 		kong.Exit(func(code int) {
 			exitCode = code
 		}),

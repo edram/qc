@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/edram/qc/internal/models"
+	"github.com/edram/qi/internal/models"
 )
 
 var ErrNotImplemented = errors.New("aiqicha API is not implemented")

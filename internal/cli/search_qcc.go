@@ -3,8 +3,8 @@ package cli
 import (
 	"context"
 
-	"github.com/edram/qc/internal/models"
-	"github.com/edram/qc/internal/qcc"
+	"github.com/edram/qi/internal/models"
+	"github.com/edram/qi/internal/qcc"
 )
 
 const searchSourceQCC searchSourceName = "qcc"

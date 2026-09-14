@@ -1,7 +1,10 @@
 package cli
 
+import "github.com/alecthomas/kong"
+
 type CLI struct {
-	Search SearchCmd `kong:"cmd,help='Search enterprise and person records.'"`
+	Version kong.VersionFlag `help:"Print version."`
+	Search  SearchCmd        `kong:"cmd,help='Search enterprise and person records.'"`
 }
 
 func New() *CLI {

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/edram/qc/internal/aiqicha"
-	"github.com/edram/qc/internal/qcc"
+	"github.com/edram/qi/internal/aiqicha"
+	"github.com/edram/qi/internal/qcc"
 )
 
 func TestSources(t *testing.T) {

@@ -23,6 +23,20 @@ func TestHelp(t *testing.T) {
 	}
 }
 
+func TestVersion(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	code := Execute([]string{"--version"}, &stdout, &stderr)
+
+	if code != 0 {
+		t.Fatalf("Execute() code = %d, want 0; stderr = %q", code, stderr.String())
+	}
+	if got := strings.TrimSpace(stdout.String()); got != "dev" {
+		t.Fatalf("version output = %q, want %q", got, "dev")
+	}
+}
+
 func TestSearchHelpListsSubcommands(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer

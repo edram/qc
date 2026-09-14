@@ -1,4 +1,4 @@
-module github.com/edram/qc
+module github.com/edram/qi
 
 go 1.25.0
 
