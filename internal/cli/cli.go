@@ -5,5 +5,7 @@ type CLI struct {
 }
 
 func New() *CLI {
-	return &CLI{}
+	return &CLI{
+		Search: newSearchCmd(),
+	}
 }

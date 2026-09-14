@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -64,14 +65,71 @@ func TestSearchCommandPaths(t *testing.T) {
 	}
 }
 
+func TestSearchSources(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		want []searchSourceName
+	}{
+		{
+			name: "default",
+			args: []string{"search", "ents", "百度"},
+			want: []searchSourceName{searchSourceQCC, searchSourceAiqicha},
+		},
+		{
+			name: "single source",
+			args: []string{"search", "ents", "百度", "--source", "qcc"},
+			want: []searchSourceName{searchSourceQCC},
+		},
+		{
+			name: "repeated flag",
+			args: []string{"search", "ents", "百度", "--source", "qcc", "--source", "aiqicha"},
+			want: []searchSourceName{searchSourceQCC, searchSourceAiqicha},
+		},
+		{
+			name: "comma separated",
+			args: []string{"search", "pers", "李彦宏", "--source", "qcc,aiqicha"},
+			want: []searchSourceName{searchSourceQCC, searchSourceAiqicha},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			command := New()
+			parser, err := kong.New(command, kong.Name("qc"), kong.Exit(func(int) {}))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := parser.Parse(tt.args); err != nil {
+				t.Fatal(err)
+			}
+			if got := command.Search.Sources; !reflect.DeepEqual(got, tt.want) {
+				t.Fatalf("Sources = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSearchRejectsUnknownSource(t *testing.T) {
+	command := New()
+	parser, err := kong.New(command, kong.Name("qc"), kong.Exit(func(int) {}))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := parser.Parse([]string{"search", "ents", "百度", "--source", "unknown"}); err == nil {
+		t.Fatal("Parse() error = nil, want an invalid source error")
+	}
+}
+
 func TestSearchCommandsAreWired(t *testing.T) {
 	tests := []struct {
 		name string
 		args []string
 		want string
 	}{
-		{name: "enterprises", args: []string{"search", "ents", "百度"}, want: "qc search ents is not implemented yet"},
-		{name: "people", args: []string{"search", "pers", "李彦宏"}, want: "qc search pers is not implemented yet"},
+		{name: "qcc enterprises", args: []string{"search", "ents", "百度", "--source", "qcc"}, want: "qcc API is not implemented"},
+		{name: "aiqicha people", args: []string{"search", "pers", "李彦宏", "--source", "aiqicha"}, want: "aiqicha API is not implemented"},
 	}
 
 	for _, tt := range tests {
