@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -17,7 +18,7 @@ const (
 )
 
 // Options configures a client. BaseURL defaults to the QCC host.
-// TID enables QCC request signing, PID is sent as the X-Pid header, and
+// PID and TID override the identifiers discovered from BaseURL.
 // CookieSource overrides the default browser-backed cookie cache.
 type Options struct {
 	BaseURL      string
@@ -35,6 +36,7 @@ type Client struct {
 	tid          string
 	pid          string
 	cookieSource CookieSource
+	identifierMu sync.Mutex
 }
 
 // New returns a client configured for the specified API host.
@@ -81,9 +83,13 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body io.R
 	if err != nil {
 		return nil, err
 	}
+	pid, tid, err := c.getPIDAndTID(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	var payload []byte
-	signedBody := c.tid != "" && body != nil
+	signedBody := body != nil
 	if signedBody {
 		payload, err = io.ReadAll(body)
 		if err != nil {
@@ -96,28 +102,32 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body io.R
 	if err != nil {
 		return nil, err
 	}
-	if c.pid != "" {
-		request.Header.Set("X-Pid", c.pid)
-	}
+	request.Header.Set("X-Pid", pid)
 	request.Header.Set("User-Agent", defaultUserAgent)
-	if c.cookieSource != nil {
-		cookies, err := c.cookieSource.Cookies(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, cookie := range cookies {
-			request.AddCookie(cookie)
-		}
+	if err := c.addCookies(ctx, request); err != nil {
+		return nil, err
 	}
-	if c.tid != "" {
-		sign := GenerateSign(request.URL.Path, string(payload), c.tid)
-		request.Header.Set(sign.HeaderName, sign.HeaderValue)
-	}
+	sign := GenerateSign(request.URL.Path, string(payload), tid)
+	request.Header.Set(sign.HeaderName, sign.HeaderValue)
 	if signedBody {
 		request.Header.Set("Content-Type", "application/json")
 	}
 
 	return c.httpClient.Do(request)
+}
+
+func (c *Client) addCookies(ctx context.Context, request *http.Request) error {
+	if c.cookieSource == nil {
+		return nil
+	}
+	cookies, err := c.cookieSource.Cookies(ctx)
+	if err != nil {
+		return err
+	}
+	for _, cookie := range cookies {
+		request.AddCookie(cookie)
+	}
+	return nil
 }
 
 func (c *Client) requestURL(endpoint string) (string, error) {

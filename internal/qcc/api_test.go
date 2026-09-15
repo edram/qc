@@ -131,7 +131,7 @@ func TestClientCachesBrowserCookiesByDefault(t *testing.T) {
 	defer server.Close()
 
 	for range 2 {
-		response, err := New(Options{BaseURL: server.URL}).Get(context.Background(), "/companies")
+		response, err := New(Options{BaseURL: server.URL, PID: "pid", TID: "tid"}).Get(context.Background(), "/companies")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -185,7 +185,7 @@ func TestClientRefreshesExpiredCookieCache(t *testing.T) {
 	}))
 	defer server.Close()
 
-	response, err := New(Options{BaseURL: server.URL}).Get(context.Background(), "/companies")
+	response, err := New(Options{BaseURL: server.URL, PID: "pid", TID: "tid"}).Get(context.Background(), "/companies")
 	if err != nil {
 		t.Fatal(err)
 	}
