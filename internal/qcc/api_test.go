@@ -29,9 +29,8 @@ func TestClientGetAndPost(t *testing.T) {
 		if err != nil || cookie.Value != "browser-cookie" {
 			t.Fatalf("session cookie = %v, %v", cookie, err)
 		}
-		const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
-		if got := r.Header.Get("User-Agent"); got != userAgent {
-			t.Fatalf("User-Agent = %q, want %q", got, userAgent)
+		if got := r.Header.Get("User-Agent"); got != defaultUserAgent {
+			t.Fatalf("User-Agent = %q, want %q", got, defaultUserAgent)
 		}
 		if got := r.Header.Get(sign.HeaderName); got != sign.HeaderValue {
 			t.Fatalf("%s = %q, want %q", sign.HeaderName, got, sign.HeaderValue)
