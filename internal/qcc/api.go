@@ -2,23 +2,74 @@ package qcc
 
 import (
 	"context"
-	"errors"
-
-	"github.com/edram/qi/internal/models"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
 )
 
-var ErrNotImplemented = errors.New("qcc API is not implemented")
+const defaultHTTPClientTimeout = 10 * time.Second
 
-type Client struct{}
-
-func New() *Client {
-	return &Client{}
+// Options configures a client. BaseURL is optional when callers use absolute URLs.
+type Options struct {
+	BaseURL    string
+	HTTPClient *http.Client
+	Timeout    time.Duration
 }
 
-func (*Client) SearchEnterprises(context.Context, string) ([]models.Enterprise, error) {
-	return nil, ErrNotImplemented
+// Client sends requests to the configured API host.
+type Client struct {
+	baseURL    string
+	httpClient *http.Client
 }
 
-func (*Client) SearchPeople(context.Context, string) ([]models.Person, error) {
-	return nil, ErrNotImplemented
+// New returns a client configured for the specified API host.
+func New(options Options) *Client {
+	httpClient := options.HTTPClient
+	if httpClient == nil {
+		timeout := options.Timeout
+		if timeout == 0 {
+			timeout = defaultHTTPClientTimeout
+		}
+		httpClient = &http.Client{Timeout: timeout}
+	}
+
+	return &Client{
+		baseURL:    strings.TrimRight(options.BaseURL, "/"),
+		httpClient: httpClient,
+	}
+}
+
+// Get sends a GET request. The caller must close the response body.
+func (c *Client) Get(ctx context.Context, endpoint string) (*http.Response, error) {
+	return c.request(ctx, http.MethodGet, endpoint, nil)
+}
+
+// Post sends a POST request with body. The caller must close the response body.
+func (c *Client) Post(ctx context.Context, endpoint string, body io.Reader) (*http.Response, error) {
+	return c.request(ctx, http.MethodPost, endpoint, body)
+}
+
+func (c *Client) request(ctx context.Context, method, endpoint string, body io.Reader) (*http.Response, error) {
+	requestURL, err := c.requestURL(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	request, err := http.NewRequestWithContext(ctx, method, requestURL, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.httpClient.Do(request)
+}
+
+func (c *Client) requestURL(endpoint string) (string, error) {
+	parsed, err := url.Parse(endpoint)
+	if err != nil || parsed.IsAbs() || c.baseURL == "" {
+		return endpoint, err
+	}
+
+	return c.baseURL + "/" + strings.TrimLeft(endpoint, "/"), nil
 }

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 
 	"github.com/edram/qi/internal/models"
 	"github.com/edram/qi/internal/qcc"
@@ -9,18 +10,20 @@ import (
 
 const searchSourceQCC searchSourceName = "qcc"
 
+var errQCCSearchNotImplemented = errors.New("qcc API is not implemented")
+
 type searchQCC struct {
 	api *qcc.Client
 }
 
 func newSearchQCC() search {
-	return &searchQCC{api: qcc.New()}
+	return &searchQCC{api: qcc.New(qcc.Options{})}
 }
 
-func (s *searchQCC) SearchEnterprises(ctx context.Context, query string) ([]models.Enterprise, error) {
-	return s.api.SearchEnterprises(ctx, query)
+func (*searchQCC) SearchEnterprises(context.Context, string) ([]models.Enterprise, error) {
+	return nil, errQCCSearchNotImplemented
 }
 
-func (s *searchQCC) SearchPeople(ctx context.Context, query string) ([]models.Person, error) {
-	return s.api.SearchPeople(ctx, query)
+func (*searchQCC) SearchPeople(context.Context, string) ([]models.Person, error) {
+	return nil, errQCCSearchNotImplemented
 }

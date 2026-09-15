@@ -4,9 +4,6 @@ import (
 	"context"
 	"errors"
 	"testing"
-
-	"github.com/edram/qi/internal/aiqicha"
-	"github.com/edram/qi/internal/qcc"
 )
 
 func TestSources(t *testing.T) {
@@ -15,8 +12,8 @@ func TestSources(t *testing.T) {
 		src     search
 		wantErr error
 	}{
-		{name: searchSourceQCC, src: newSearchQCC(), wantErr: qcc.ErrNotImplemented},
-		{name: searchSourceAiqicha, src: newSearchAiqicha(), wantErr: aiqicha.ErrNotImplemented},
+		{name: searchSourceQCC, src: newSearchQCC(), wantErr: errQCCSearchNotImplemented},
+		{name: searchSourceAiqicha, src: newSearchAiqicha(), wantErr: errAiqichaSearchNotImplemented},
 	}
 
 	for _, tt := range tests {
