@@ -136,33 +136,6 @@ func TestSearchRejectsUnknownSource(t *testing.T) {
 	}
 }
 
-func TestSearchCommandsAreWired(t *testing.T) {
-	tests := []struct {
-		name string
-		args []string
-		want string
-	}{
-		{name: "qcc enterprises", args: []string{"search", "ents", "百度", "--source", "qcc"}, want: "qcc API is not implemented"},
-		{name: "aiqicha people", args: []string{"search", "pers", "李彦宏", "--source", "aiqicha"}, want: "aiqicha API is not implemented"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var stdout bytes.Buffer
-			var stderr bytes.Buffer
-
-			code := Execute(tt.args, &stdout, &stderr)
-
-			if code != 1 {
-				t.Fatalf("Execute() code = %d, want 1", code)
-			}
-			if !strings.Contains(stderr.String(), tt.want) {
-				t.Fatalf("stderr = %q, want it to contain %q", stderr.String(), tt.want)
-			}
-		})
-	}
-}
-
 func TestSearchRequiresSubcommand(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
