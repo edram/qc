@@ -29,11 +29,34 @@ func TestBrowserCookieSource(t *testing.T) {
 	}
 	t.Cleanup(func() { readBrowserCookies = previous })
 
-	cookies, err := (BrowserCookieSource{Profile: "Default"}).Cookies(context.Background())
+	cookies, err := (BrowserCookieSource{
+		Browser: sweetcookie.BrowserChrome,
+		Profile: "Default",
+	}).Cookies(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(cookies) != 1 || cookies[0].Name != "session" || cookies[0].Value != "browser-cookie" {
 		t.Fatalf("cookies = %#v", cookies)
+	}
+}
+
+func TestBrowserCookieSourceUsesAvailableBrowsersByDefault(t *testing.T) {
+	previous := readBrowserCookies
+	readBrowserCookies = func(_ context.Context, options sweetcookie.Options) (sweetcookie.Result, error) {
+		if len(options.Browsers) != 0 {
+			t.Fatalf("Browsers = %v, want sweetcookie defaults", options.Browsers)
+		}
+		return sweetcookie.Result{Cookies: []sweetcookie.Cookie{{
+			Name:   "session",
+			Value:  "browser-cookie",
+			Domain: ".qcc.com",
+			Path:   "/",
+		}}}, nil
+	}
+	t.Cleanup(func() { readBrowserCookies = previous })
+
+	if _, err := (BrowserCookieSource{}).Cookies(context.Background()); err != nil {
+		t.Fatal(err)
 	}
 }
