@@ -2,22 +2,23 @@ package qcc
 
 import (
 	"context"
-	"errors"
 	"net/http"
-	"time"
 
+	sharedcookies "github.com/edram/qi/internal/cookies"
 	"github.com/steipete/sweetcookie"
 )
 
-// ErrNoCookies is returned when the configured browser has no QCC cookies.
-var ErrNoCookies = errors.New("qcc: no browser cookies found")
-
-var readBrowserCookies = sweetcookie.Get
+const (
+	cookieApplicationName = "qc"
+	cookieSourceName      = "qcc"
+	cookieCacheProfile    = "default"
+)
 
 // CookieSource supplies cookies for an outgoing QCC request.
-type CookieSource interface {
-	Cookies(context.Context) ([]*http.Cookie, error)
-}
+type CookieSource = sharedcookies.Source
+
+// ErrNoCookies is returned when the configured browser has no QCC cookies.
+var ErrNoCookies = sharedcookies.ErrNoCookies
 
 // BrowserCookieSource reads QCC cookies from local browser profiles.
 // An empty Browser uses sweetcookie's default browser discovery order.
@@ -28,39 +29,26 @@ type BrowserCookieSource struct {
 
 // Cookies reads the cookies that match the QCC web origin.
 func (s BrowserCookieSource) Cookies(ctx context.Context) ([]*http.Cookie, error) {
-	options := sweetcookie.Options{
+	return (sharedcookies.BrowserSource{
 		URL:     defaultBaseURL,
-		Mode:    sweetcookie.ModeFirst,
-		Timeout: 5 * time.Second,
-	}
-	if s.Browser != "" {
-		options.Browsers = []sweetcookie.Browser{s.Browser}
-		if s.Profile != "" {
-			options.Profiles = map[sweetcookie.Browser]string{s.Browser: s.Profile}
-		}
-	}
-	result, err := readBrowserCookies(ctx, options)
+		Browser: s.Browser,
+		Profile: s.Profile,
+	}).Cookies(ctx)
+}
+
+type defaultCookieSource struct{}
+
+func newCookieSource() CookieSource {
+	return defaultCookieSource{}
+}
+
+func (defaultCookieSource) Cookies(ctx context.Context) ([]*http.Cookie, error) {
+	path, err := sharedcookies.DefaultPath(cookieApplicationName, cookieSourceName, cookieCacheProfile)
 	if err != nil {
 		return nil, err
 	}
-	if len(result.Cookies) == 0 {
-		return nil, ErrNoCookies
-	}
-
-	cookies := make([]*http.Cookie, 0, len(result.Cookies))
-	for _, cookie := range result.Cookies {
-		httpCookie := &http.Cookie{
-			Name:     cookie.Name,
-			Value:    cookie.Value,
-			Domain:   cookie.Domain,
-			Path:     cookie.Path,
-			Secure:   cookie.Secure,
-			HttpOnly: cookie.HTTPOnly,
-		}
-		if cookie.Expires != nil {
-			httpCookie.Expires = *cookie.Expires
-		}
-		cookies = append(cookies, httpCookie)
-	}
-	return cookies, nil
+	return (sharedcookies.CachedSource{
+		Path:   path,
+		Source: BrowserCookieSource{},
+	}).Cookies(ctx)
 }

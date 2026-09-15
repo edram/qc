@@ -18,7 +18,7 @@ const (
 
 // Options configures a client. BaseURL defaults to the QCC host.
 // TID enables QCC request signing, PID is sent as the X-Pid header, and
-// CookieSource supplies cookies for outgoing requests.
+// CookieSource overrides the default browser-backed cookie cache.
 type Options struct {
 	BaseURL      string
 	HTTPClient   *http.Client
@@ -43,6 +43,10 @@ func New(options Options) *Client {
 	if baseURL == "" {
 		baseURL = defaultBaseURL
 	}
+	cookieSource := options.CookieSource
+	if cookieSource == nil {
+		cookieSource = newCookieSource()
+	}
 
 	httpClient := options.HTTPClient
 	if httpClient == nil {
@@ -58,7 +62,7 @@ func New(options Options) *Client {
 		httpClient:   httpClient,
 		tid:          options.TID,
 		pid:          options.PID,
-		cookieSource: options.CookieSource,
+		cookieSource: cookieSource,
 	}
 }
 

@@ -5,8 +5,14 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+	"time"
+
+	sharedcookies "github.com/edram/qi/internal/cookies"
+	"github.com/steipete/sweetcookie"
 )
 
 func TestClientGetAndPost(t *testing.T) {
@@ -91,5 +97,100 @@ func (f cookieSourceFunc) Cookies(ctx context.Context) ([]*http.Cookie, error) {
 func TestNewUsesDefaultBaseURL(t *testing.T) {
 	if got := New(Options{}).baseURL; got != "https://www.qcc.com" {
 		t.Fatalf("baseURL = %q, want %q", got, "https://www.qcc.com")
+	}
+}
+
+func TestClientCachesBrowserCookiesByDefault(t *testing.T) {
+	configDir := t.TempDir()
+	t.Setenv("APPDATA", configDir)
+	t.Setenv("HOME", configDir)
+	t.Setenv("XDG_CONFIG_HOME", configDir)
+	userConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	browserReads := 0
+	restore := sharedcookies.SetReadCookies(func(context.Context, sweetcookie.Options) (sweetcookie.Result, error) {
+		browserReads++
+		return sweetcookie.Result{Cookies: []sweetcookie.Cookie{{
+			Name:   "session",
+			Value:  "browser-cookie",
+			Domain: ".qcc.com",
+			Path:   "/",
+		}}}, nil
+	})
+	t.Cleanup(restore)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session")
+		if err != nil || cookie.Value != "browser-cookie" {
+			t.Errorf("session cookie = %v, %v", cookie, err)
+		}
+	}))
+	defer server.Close()
+
+	for range 2 {
+		response, err := New(Options{BaseURL: server.URL}).Get(context.Background(), "/companies")
+		if err != nil {
+			t.Fatal(err)
+		}
+		response.Body.Close()
+	}
+
+	if browserReads != 1 {
+		t.Fatalf("browser reads = %d, want 1", browserReads)
+	}
+	cachePath := filepath.Join(userConfigDir, "qc", "cookies", "qcc.default.json")
+	if _, err := os.Stat(cachePath); err != nil {
+		t.Fatalf("cookie cache %q: %v", cachePath, err)
+	}
+}
+
+func TestClientRefreshesExpiredCookieCache(t *testing.T) {
+	configDir := t.TempDir()
+	t.Setenv("APPDATA", configDir)
+	t.Setenv("HOME", configDir)
+	t.Setenv("XDG_CONFIG_HOME", configDir)
+	userConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cachePath := filepath.Join(userConfigDir, "qc", "cookies", "qcc.default.json")
+	if err := os.MkdirAll(filepath.Dir(cachePath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	expiredData := []byte(`[{"name":"session","value":"expired-cookie","expires":"` + time.Now().Add(-time.Hour).Format(time.RFC3339Nano) + `"}]`)
+	if err := os.WriteFile(cachePath, expiredData, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	browserReads := 0
+	restore := sharedcookies.SetReadCookies(func(context.Context, sweetcookie.Options) (sweetcookie.Result, error) {
+		browserReads++
+		return sweetcookie.Result{Cookies: []sweetcookie.Cookie{{
+			Name:   "session",
+			Value:  "fresh-cookie",
+			Domain: ".qcc.com",
+			Path:   "/",
+		}}}, nil
+	})
+	t.Cleanup(restore)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session")
+		if err != nil || cookie.Value != "fresh-cookie" {
+			t.Errorf("session cookie = %v, %v", cookie, err)
+		}
+	}))
+	defer server.Close()
+
+	response, err := New(Options{BaseURL: server.URL}).Get(context.Background(), "/companies")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response.Body.Close()
+	if browserReads != 1 {
+		t.Fatalf("browser reads = %d, want 1", browserReads)
 	}
 }

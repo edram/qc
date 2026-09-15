@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
+	sharedcookies "github.com/edram/qi/internal/cookies"
 	"github.com/steipete/sweetcookie"
 )
 
 func TestBrowserCookieSource(t *testing.T) {
-	previous := readBrowserCookies
-	readBrowserCookies = func(_ context.Context, options sweetcookie.Options) (sweetcookie.Result, error) {
+	restore := sharedcookies.SetReadCookies(func(_ context.Context, options sweetcookie.Options) (sweetcookie.Result, error) {
 		if options.URL != "https://www.qcc.com" {
 			t.Fatalf("URL = %q", options.URL)
 		}
@@ -26,8 +26,8 @@ func TestBrowserCookieSource(t *testing.T) {
 			Path:   "/",
 			Secure: true,
 		}}}, nil
-	}
-	t.Cleanup(func() { readBrowserCookies = previous })
+	})
+	t.Cleanup(restore)
 
 	cookies, err := (BrowserCookieSource{
 		Browser: sweetcookie.BrowserChrome,
@@ -42,8 +42,7 @@ func TestBrowserCookieSource(t *testing.T) {
 }
 
 func TestBrowserCookieSourceUsesAvailableBrowsersByDefault(t *testing.T) {
-	previous := readBrowserCookies
-	readBrowserCookies = func(_ context.Context, options sweetcookie.Options) (sweetcookie.Result, error) {
+	restore := sharedcookies.SetReadCookies(func(_ context.Context, options sweetcookie.Options) (sweetcookie.Result, error) {
 		if len(options.Browsers) != 0 {
 			t.Fatalf("Browsers = %v, want sweetcookie defaults", options.Browsers)
 		}
@@ -53,8 +52,8 @@ func TestBrowserCookieSourceUsesAvailableBrowsersByDefault(t *testing.T) {
 			Domain: ".qcc.com",
 			Path:   "/",
 		}}}, nil
-	}
-	t.Cleanup(func() { readBrowserCookies = previous })
+	})
+	t.Cleanup(restore)
 
 	if _, err := (BrowserCookieSource{}).Cookies(context.Background()); err != nil {
 		t.Fatal(err)
