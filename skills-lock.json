@@ -19,6 +19,12 @@
       "skillPath": "skills/git-commit-convention/SKILL.md",
       "computedHash": "8524a19e3006ac139ac316c57878c39a7d77e399bd045a71516c2b237ca47d2e"
     },
+    "skill-writer": {
+      "source": "edram/skills",
+      "sourceType": "github",
+      "skillPath": "skills/skill-writer/SKILL.md",
+      "computedHash": "4e8fdc3d0347057321cabfa792770023cfda58c95c11f9f682c6a0618cb35793"
+    },
     "tdd": {
       "source": "edram/skills",
       "sourceType": "github",
