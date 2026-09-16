@@ -3,8 +3,11 @@
 `qc` 是一个企查命令行工具。目前支持通过企查查搜索企业和人员，并将结果转换为统一模型后输出 JSON。
 
 ```console
+qc config set user-agent "Mozilla/5.0 ..."
+qc --profile work config set user-agent "Mozilla/5.0 ..."
 qc auth import --browser chrome
 qc --profile work auth import --browser chrome --browser-profile "Profile 1"
+qc --user-agent "Mozilla/5.0 ..." status
 qc status
 qc --profile work status
 qc search ents "百度"
@@ -20,6 +23,8 @@ qc search ents "百度" --source qcc --source aiqicha
 `--profile` 选择认证 profile，默认值为 `default`，也可通过 `QC_PROFILE` 设置。profile 决定 Cookie 缓存文件，例如 `qcc.default.json` 或 `qcc.work.json`；status、搜索和后续请求共享同一 profile。
 
 `qc auth import` 从浏览器同步企查查 Cookie 到当前认证 profile。`--browser` 选择浏览器，默认是 Chrome；`--browser-profile` 选择浏览器内部的用户目录。它和全局 `--profile` 含义不同，例如 `qc --profile work auth import --browser chrome --browser-profile "Profile 1"` 会从 Chrome 的 `Profile 1` 读取，并写入 qc 的 `work` 缓存。
+
+企查查请求必须显式配置与登录 Cookie 对应浏览器一致的 User-Agent，否则企查查可能更新会话并要求重新登录。使用 `qc config set user-agent "Mozilla/5.0 ..."` 保存到当前 profile，或为单次命令传入 `--user-agent "Mozilla/5.0 ..."`。配置文件只按 profile 区分，例如 `config.default.json`、`config.work.json`，其中的设置由各数据源共享；读取非 default profile 时会先载入 default 配置，再合并当前 profile 中已设置的字段。未设置时，qc 会在发送企查查请求前报错并给出设置提示；程序的兜底 User-Agent 不用于企查查。
 
 `qc status` 显示当前 profile、Cookie 清单和各数据源的当前账号。Cookie 区块列出请求使用的安全元数据；企查查账号区块通过身份接口验证当前用户，爱企查账号暂时标记为尚未接入。Cookie 值不会输出，手机号和邮箱会脱敏。
 
@@ -43,6 +48,7 @@ qc search ents "百度" --source qcc --source aiqicha
 │   ├── run.go                     # 解析、执行和退出码处理
 │   ├── run_test.go                # 命令树和 CLI 行为测试
 │   ├── auth.go                    # 从浏览器同步 Cookie
+│   ├── config.go                  # 按 profile 设置持久配置
 │   ├── status.go                  # 聚合并显示各数据源状态
 │   ├── status_cookies.go          # 各数据源 Cookie 元数据
 │   ├── status_qcc.go              # 企查查当前账号
@@ -53,6 +59,7 @@ qc search ents "百度" --source qcc --source aiqicha
 ├── internal/qcc/
 │   ├── api.go                     # 企查查 HTTP 客户端
 │   └── auth.go                    # 安全 Cookie 元数据和账号身份
+├── internal/config/config.go      # profile 配置文件读写
 ├── internal/aiqicha/api.go        # 爱企查客户端（待接入）
 ├── internal/models/
 │   ├── enterprise.go              # 统一的企业领域模型

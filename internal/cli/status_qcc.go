@@ -11,8 +11,8 @@ type statusQCC struct {
 	api *qcc.Client
 }
 
-func newStatusQCCClient(profile string) *qcc.Client {
-	return qcc.New(qcc.Options{Profile: profile})
+func newStatusQCCClient(profile, userAgent string) *qcc.Client {
+	return qcc.New(qcc.Options{Profile: profile, UserAgent: userAgent})
 }
 
 func newStatusQCC(api *qcc.Client) statusAccountProvider {

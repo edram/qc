@@ -3,6 +3,7 @@ package qcc
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -14,12 +15,17 @@ import (
 const (
 	defaultBaseURL           = "https://www.qcc.com"
 	defaultHTTPClientTimeout = 10 * time.Second
-	defaultUserAgent         = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+	// defaultUserAgent remains the generic fallback; QCC requests require Options.UserAgent.
+	defaultUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
 )
+
+// ErrUserAgentRequired prevents QCC from receiving cookies under a different browser identity.
+var ErrUserAgentRequired = errors.New("qcc: User-Agent is required because QCC may invalidate cookies when it differs from the login browser; use --user-agent for one command or run 'qc [--profile <name>] config set user-agent <value>' to save it")
 
 // Options configures a client. BaseURL defaults to the QCC host.
 // PID and TID override the identifiers discovered from BaseURL.
 // Profile selects the browser-backed cookie cache; CookieSource overrides it.
+// UserAgent is required for network requests and must match the login browser.
 type Options struct {
 	BaseURL      string
 	HTTPClient   *http.Client
@@ -27,6 +33,7 @@ type Options struct {
 	TID          string
 	PID          string
 	Profile      string
+	UserAgent    string
 	CookieSource CookieSource
 }
 
@@ -36,6 +43,7 @@ type Client struct {
 	httpClient   *http.Client
 	tid          string
 	pid          string
+	userAgent    string
 	cookieSource CookieSource
 	identifierMu sync.Mutex
 }
@@ -65,6 +73,7 @@ func New(options Options) *Client {
 		httpClient:   httpClient,
 		tid:          options.TID,
 		pid:          options.PID,
+		userAgent:    strings.TrimSpace(options.UserAgent),
 		cookieSource: cookieSource,
 	}
 }
@@ -80,6 +89,9 @@ func (c *Client) Post(ctx context.Context, endpoint string, body io.Reader) (*ht
 }
 
 func (c *Client) request(ctx context.Context, method, endpoint string, body io.Reader) (*http.Response, error) {
+	if c.userAgent == "" {
+		return nil, ErrUserAgentRequired
+	}
 	requestURL, err := c.requestURL(endpoint)
 	if err != nil {
 		return nil, err
@@ -104,7 +116,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body io.R
 		return nil, err
 	}
 	request.Header.Set("X-Pid", pid)
-	request.Header.Set("User-Agent", defaultUserAgent)
+	request.Header.Set("User-Agent", c.userAgent)
 	if err := c.addCookies(ctx, request); err != nil {
 		return nil, err
 	}

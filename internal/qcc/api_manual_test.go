@@ -5,13 +5,20 @@ import (
 	"io"
 	"strings"
 	"testing"
+
+	appconfig "github.com/edram/qi/internal/config"
 )
 
 func TestManualSearchMulti(t *testing.T) {
 	ctx := context.Background()
+	userAgent, err := appconfig.UserAgent("default")
+	if err != nil {
+		t.Fatal(err)
+	}
 	client := New(Options{
-		PID: "3ff8f7c8c0c2daa435bc6307fb87af7c",
-		TID: "fd8fc3911321c8c4e3ce9b0144b4e600",
+		PID:       "3ff8f7c8c0c2daa435bc6307fb87af7c",
+		TID:       "fd8fc3911321c8c4e3ce9b0144b4e600",
+		UserAgent: userAgent,
 	})
 	response, err := client.Post(
 		ctx,

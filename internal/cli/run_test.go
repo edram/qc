@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/alecthomas/kong"
+	appconfig "github.com/edram/qi/internal/config"
 )
 
 func TestHelp(t *testing.T) {
@@ -65,6 +66,74 @@ func TestProfileFlag(t *testing.T) {
 	}
 	if command.Profile != "work" {
 		t.Fatalf("Profile = %q, want %q", command.Profile, "work")
+	}
+}
+
+func TestUserAgentFlag(t *testing.T) {
+	configDir := t.TempDir()
+	t.Setenv("APPDATA", configDir)
+	t.Setenv("HOME", configDir)
+	t.Setenv("XDG_CONFIG_HOME", configDir)
+	if _, err := appconfig.SetUserAgent("default", "persisted-user-agent"); err != nil {
+		t.Fatal(err)
+	}
+
+	command := New()
+	parser, err := kong.New(command, kong.Name("qc"), kong.Exit(func(int) {}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := parser.Parse([]string{"--user-agent", "browser-user-agent", "status"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := command.loadProfileConfig(); err != nil {
+		t.Fatal(err)
+	}
+	if command.UserAgent != "browser-user-agent" {
+		t.Fatalf("UserAgent = %q, want %q", command.UserAgent, "browser-user-agent")
+	}
+}
+
+func TestConfigSetUserAgentForProfile(t *testing.T) {
+	configDir := t.TempDir()
+	t.Setenv("APPDATA", configDir)
+	t.Setenv("HOME", configDir)
+	t.Setenv("XDG_CONFIG_HOME", configDir)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Execute([]string{"--profile", "work", "config", "set", "user-agent", "browser-user-agent"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("Execute() code = %d, want 0; stderr = %q", code, stderr.String())
+	}
+	userAgent, err := appconfig.UserAgent("work")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if userAgent != "browser-user-agent" {
+		t.Fatalf("UserAgent(work) = %q, want %q", userAgent, "browser-user-agent")
+	}
+	if !strings.Contains(stdout.String(), "profile work") {
+		t.Fatalf("stdout = %q, want profile confirmation", stdout.String())
+	}
+}
+
+func TestCLIUsesPersistedProfileUserAgent(t *testing.T) {
+	configDir := t.TempDir()
+	t.Setenv("APPDATA", configDir)
+	t.Setenv("HOME", configDir)
+	t.Setenv("XDG_CONFIG_HOME", configDir)
+	if _, err := appconfig.SetUserAgent("work", "persisted-user-agent"); err != nil {
+		t.Fatal(err)
+	}
+
+	command := New()
+	command.Profile = "work"
+	if err := command.loadProfileConfig(); err != nil {
+		t.Fatal(err)
+	}
+	if command.UserAgent != "persisted-user-agent" {
+		t.Fatalf("UserAgent = %q, want %q", command.UserAgent, "persisted-user-agent")
 	}
 }
 

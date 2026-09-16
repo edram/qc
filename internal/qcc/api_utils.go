@@ -36,11 +36,14 @@ func (c *Client) getPIDAndTID(ctx context.Context) (string, string, error) {
 
 // FetchPIDAndTID reads the request identifiers embedded in the configured base page.
 func (c *Client) FetchPIDAndTID(ctx context.Context) (string, string, error) {
+	if c.userAgent == "" {
+		return "", "", ErrUserAgentRequired
+	}
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL, nil)
 	if err != nil {
 		return "", "", err
 	}
-	request.Header.Set("User-Agent", defaultUserAgent)
+	request.Header.Set("User-Agent", c.userAgent)
 	if err := c.addCookies(ctx, request); err != nil {
 		return "", "", err
 	}

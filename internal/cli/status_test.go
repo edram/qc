@@ -26,9 +26,10 @@ func TestStatusShowsMissingCookiesWithoutRequestingAuthInfo(t *testing.T) {
 	defer server.Close()
 
 	api := qcc.New(qcc.Options{
-		BaseURL: server.URL,
-		PID:     "pid",
-		TID:     "tid",
+		BaseURL:   server.URL,
+		PID:       "pid",
+		TID:       "tid",
+		UserAgent: qccTestUserAgent,
 		CookieSource: statusCookieSourceFunc(func(context.Context) ([]*http.Cookie, error) {
 			return nil, qcc.ErrNoCookies
 		}),
@@ -69,6 +70,7 @@ func TestStatusShowsCookieMetadataAndCurrentUser(t *testing.T) {
 		BaseURL:      server.URL,
 		PID:          "pid",
 		TID:          "tid",
+		UserAgent:    qccTestUserAgent,
 		CookieSource: cookieSource,
 	})
 	var output bytes.Buffer
@@ -112,9 +114,10 @@ func TestStatusShowsCookiesWhenAuthenticationFails(t *testing.T) {
 	defer server.Close()
 
 	api := qcc.New(qcc.Options{
-		BaseURL: server.URL,
-		PID:     "pid",
-		TID:     "tid",
+		BaseURL:   server.URL,
+		PID:       "pid",
+		TID:       "tid",
+		UserAgent: qccTestUserAgent,
 		CookieSource: statusCookieSourceFunc(func(context.Context) ([]*http.Cookie, error) {
 			return []*http.Cookie{{Name: "QCCSESSID", Value: "expired", Domain: ".qcc.com", Path: "/"}}, nil
 		}),

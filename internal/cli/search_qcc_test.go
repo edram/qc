@@ -13,6 +13,8 @@ import (
 	"github.com/edram/qi/internal/qcc"
 )
 
+const qccTestUserAgent = "Mozilla/5.0 test browser"
+
 type emptyCookieSource struct{}
 
 func (emptyCookieSource) Cookies(context.Context) ([]*http.Cookie, error) {
@@ -29,6 +31,7 @@ func TestSearchQCCEnterprisesRejectsProviderError(t *testing.T) {
 		BaseURL:      server.URL,
 		PID:          "pid",
 		TID:          "tid",
+		UserAgent:    qccTestUserAgent,
 		CookieSource: emptyCookieSource{},
 	})}
 
@@ -48,6 +51,7 @@ func TestSearchQCCEnterprisesRejectsHTTPError(t *testing.T) {
 		BaseURL:      server.URL,
 		PID:          "pid",
 		TID:          "tid",
+		UserAgent:    qccTestUserAgent,
 		CookieSource: emptyCookieSource{},
 	})}
 
@@ -103,6 +107,7 @@ func TestSearchQCCEnterprises(t *testing.T) {
 		BaseURL:      server.URL,
 		PID:          "pid",
 		TID:          "tid",
+		UserAgent:    qccTestUserAgent,
 		CookieSource: emptyCookieSource{},
 	})}
 
@@ -176,6 +181,7 @@ func TestSearchQCCPeople(t *testing.T) {
 		BaseURL:      server.URL,
 		PID:          "pid",
 		TID:          "tid",
+		UserAgent:    qccTestUserAgent,
 		CookieSource: emptyCookieSource{},
 	})}
 

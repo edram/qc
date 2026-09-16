@@ -55,8 +55,8 @@ type StatusCmd struct {
 	output  io.Writer
 }
 
-func newStatusCmd(profile string) StatusCmd {
-	qccClient := newStatusQCCClient(profile)
+func newStatusCmd(profile, userAgent string) StatusCmd {
+	qccClient := newStatusQCCClient(profile, userAgent)
 	return StatusCmd{
 		profile: profile,
 		cookies: newStatusCookies(qccClient),
@@ -66,8 +66,8 @@ func newStatusCmd(profile string) StatusCmd {
 	}
 }
 
-func (cmd *StatusCmd) configureProfile(profile string) {
-	qccClient := newStatusQCCClient(profile)
+func (cmd *StatusCmd) configureProfile(profile, userAgent string) {
+	qccClient := newStatusQCCClient(profile, userAgent)
 	cmd.profile = profile
 	cmd.cookies = newStatusCookies(qccClient)
 	cmd.qcc = newStatusQCC(qccClient)

@@ -33,6 +33,7 @@ func TestClientReturnsCookieInfoAndAuthInfo(t *testing.T) {
 		BaseURL:      server.URL,
 		PID:          "pid",
 		TID:          "tid",
+		UserAgent:    testUserAgent,
 		CookieSource: cookieSource,
 	})
 	cookies, err := client.CookieInfo(context.Background())
@@ -70,9 +71,10 @@ func TestClientAuthInfoRejectsHTTPError(t *testing.T) {
 	defer server.Close()
 
 	client := New(Options{
-		BaseURL: server.URL,
-		PID:     "pid",
-		TID:     "tid",
+		BaseURL:   server.URL,
+		PID:       "pid",
+		TID:       "tid",
+		UserAgent: testUserAgent,
 		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) {
 			return []*http.Cookie{{Name: "QCCSESSID", Value: "expired"}}, nil
 		}),
@@ -90,9 +92,10 @@ func TestClientAuthInfoRejectsMissingAccount(t *testing.T) {
 	defer server.Close()
 
 	client := New(Options{
-		BaseURL: server.URL,
-		PID:     "pid",
-		TID:     "tid",
+		BaseURL:   server.URL,
+		PID:       "pid",
+		TID:       "tid",
+		UserAgent: testUserAgent,
 		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) {
 			return []*http.Cookie{{Name: "QCCSESSID", Value: "expired"}}, nil
 		}),

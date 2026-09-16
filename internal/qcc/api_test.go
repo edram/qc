@@ -15,6 +15,8 @@ import (
 	"github.com/steipete/sweetcookie"
 )
 
+const testUserAgent = "Mozilla/5.0 test browser"
+
 func TestClientGetAndPost(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
@@ -29,8 +31,8 @@ func TestClientGetAndPost(t *testing.T) {
 		if err != nil || cookie.Value != "browser-cookie" {
 			t.Fatalf("session cookie = %v, %v", cookie, err)
 		}
-		if got := r.Header.Get("User-Agent"); got != defaultUserAgent {
-			t.Fatalf("User-Agent = %q, want %q", got, defaultUserAgent)
+		if got := r.Header.Get("User-Agent"); got != testUserAgent {
+			t.Fatalf("User-Agent = %q, want %q", got, testUserAgent)
 		}
 		if got := r.Header.Get(sign.HeaderName); got != sign.HeaderValue {
 			t.Fatalf("%s = %q, want %q", sign.HeaderName, got, sign.HeaderValue)
@@ -52,9 +54,10 @@ func TestClientGetAndPost(t *testing.T) {
 	defer server.Close()
 
 	client := New(Options{
-		BaseURL: server.URL,
-		TID:     "tid-123",
-		PID:     "pid-123",
+		BaseURL:   server.URL,
+		TID:       "tid-123",
+		PID:       "pid-123",
+		UserAgent: testUserAgent,
 		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) {
 			return []*http.Cookie{{Name: "session", Value: "browser-cookie"}}, nil
 		}),
@@ -84,6 +87,38 @@ func TestClientGetAndPost(t *testing.T) {
 				t.Fatalf("response body = %q, want %q", body, tt.want)
 			}
 		})
+	}
+}
+
+func TestClientRequiresUserAgentBeforeRequest(t *testing.T) {
+	requested := false
+	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		requested = true
+	}))
+	defer server.Close()
+
+	client := New(Options{
+		BaseURL: server.URL,
+		PID:     "pid",
+		TID:     "tid",
+		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) {
+			return nil, nil
+		}),
+	})
+	response, err := client.Get(context.Background(), "/companies")
+	if response != nil {
+		response.Body.Close()
+	}
+	if err == nil {
+		t.Fatal("Get() error = nil, want missing User-Agent error")
+	}
+	for _, want := range []string{"QCC may invalidate cookies", "--user-agent", "--profile <name>", "config set user-agent"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("Get() error = %q, want %q", err, want)
+		}
+	}
+	if requested {
+		t.Fatal("QCC request sent without configured User-Agent")
 	}
 }
 
@@ -130,7 +165,7 @@ func TestClientCachesBrowserCookiesByDefault(t *testing.T) {
 	defer server.Close()
 
 	for range 2 {
-		response, err := New(Options{BaseURL: server.URL, PID: "pid", TID: "tid"}).Get(context.Background(), "/companies")
+		response, err := New(Options{BaseURL: server.URL, PID: "pid", TID: "tid", UserAgent: testUserAgent}).Get(context.Background(), "/companies")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -184,7 +219,7 @@ func TestClientRefreshesExpiredCookieCache(t *testing.T) {
 	}))
 	defer server.Close()
 
-	response, err := New(Options{BaseURL: server.URL, PID: "pid", TID: "tid"}).Get(context.Background(), "/companies")
+	response, err := New(Options{BaseURL: server.URL, PID: "pid", TID: "tid", UserAgent: testUserAgent}).Get(context.Background(), "/companies")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -220,10 +255,11 @@ func TestClientUsesSelectedCookieProfile(t *testing.T) {
 	defer server.Close()
 
 	response, err := New(Options{
-		BaseURL: server.URL,
-		PID:     "pid",
-		TID:     "tid",
-		Profile: "work",
+		BaseURL:   server.URL,
+		PID:       "pid",
+		TID:       "tid",
+		Profile:   "work",
+		UserAgent: testUserAgent,
 	}).Get(context.Background(), "/companies")
 	if err != nil {
 		t.Fatal(err)

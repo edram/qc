@@ -19,7 +19,8 @@ window.tid = 'tid-from-base-url';
 	defer server.Close()
 
 	client := New(Options{
-		BaseURL: server.URL,
+		BaseURL:   server.URL,
+		UserAgent: testUserAgent,
 		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) {
 			return nil, nil
 		}),
@@ -41,8 +42,8 @@ func TestClientFetchesPIDAndTIDWhenMissing(t *testing.T) {
 			if r.Method != http.MethodGet {
 				t.Errorf("method = %s, want GET", r.Method)
 			}
-			if got := r.Header.Get("User-Agent"); got != defaultUserAgent {
-				t.Errorf("User-Agent = %q, want %q", got, defaultUserAgent)
+			if got := r.Header.Get("User-Agent"); got != testUserAgent {
+				t.Errorf("User-Agent = %q, want %q", got, testUserAgent)
 			}
 			cookie, err := r.Cookie("session")
 			if err != nil || cookie.Value != "browser-cookie" {
@@ -70,7 +71,8 @@ window.tid = '60b78b88dde384dbb6a24cb6c09c4656';
 	defer server.Close()
 
 	client := New(Options{
-		BaseURL: server.URL,
+		BaseURL:   server.URL,
+		UserAgent: testUserAgent,
 		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) {
 			return []*http.Cookie{{Name: "session", Value: "browser-cookie"}}, nil
 		}),
@@ -99,7 +101,8 @@ func TestClientRequiresBothIdentifiers(t *testing.T) {
 	defer server.Close()
 
 	client := New(Options{
-		BaseURL: server.URL,
+		BaseURL:   server.URL,
+		UserAgent: testUserAgent,
 		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) {
 			return nil, nil
 		}),

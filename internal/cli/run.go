@@ -10,6 +10,7 @@ import (
 func Execute(args []string, stdout, stderr io.Writer) int {
 	command := New()
 	command.Auth.Import.output = stdout
+	command.Config.Set.UserAgent.output = stdout
 	command.Search.output = stdout
 	command.Status.output = stdout
 	exitCode := -1
@@ -36,6 +37,10 @@ func Execute(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		_, _ = fmt.Fprintln(stderr, err)
 		return 2
+	}
+	if err := command.loadProfileConfig(); err != nil {
+		_, _ = fmt.Fprintln(stderr, err)
+		return 1
 	}
 	command.configureProfile()
 	if err := ctx.Run(); err != nil {
