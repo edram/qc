@@ -117,6 +117,7 @@ func TestSearchQCCEnterprises(t *testing.T) {
 	}
 	want := []models.Enterprise{{
 		ID:                  "3f603703d59a04cb",
+		DetailURL:           "https://www.qcc.com/firm/3f603703d59a04cb.html",
 		Name:                "百度在线网络技术（北京）有限公司",
 		RegistrationNumber:  "110000410144104",
 		CreditCode:          "91110108717743469K",
@@ -225,6 +226,7 @@ func TestSearchQCCPeople(t *testing.T) {
 	}
 	want := []models.Person{{
 		ID:                  "p089070bd9e914e774ef3e95d00ec5b0",
+		DetailURL:           "https://www.qcc.com/pl/p089070bd9e914e774ef3e95d00ec5b0.html",
 		Name:                "李彦宏",
 		MainCompanyID:       "576c21e3468a6b178bbf291e4820e896",
 		MainCompanyName:     "北京百度网讯科技有限公司",

@@ -61,14 +61,14 @@ qc search pers "李彦宏" --source qcc \
 Both commands write a JSON array to standard output. Enterprise objects can include:
 
 ```text
-id, name, registrationNumber, creditCode, legalRepresentative, status,
+id, detailUrl, name, registrationNumber, creditCode, legalRepresentative, status,
 establishedDate, address, registeredCapital, phone, email, logoUrl
 ```
 
 Person objects can include:
 
 ```text
-id, name, mainCompanyId, mainCompanyName, role, relatedCompanyCount,
+id, detailUrl, name, mainCompanyId, mainCompanyName, role, relatedCompanyCount,
 partnerCount, introduction, avatarUrl
 ```
 

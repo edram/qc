@@ -3,6 +3,7 @@ package models
 // Enterprise is the provider-independent result of a company search.
 type Enterprise struct {
 	ID                  string `json:"id"`
+	DetailURL           string `json:"detailUrl,omitempty"`
 	Name                string `json:"name"`
 	RegistrationNumber  string `json:"registrationNumber,omitempty"`
 	CreditCode          string `json:"creditCode,omitempty"`

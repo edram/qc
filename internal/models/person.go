@@ -3,6 +3,7 @@ package models
 // Person is the provider-independent result of a people search.
 type Person struct {
 	ID                  string `json:"id"`
+	DetailURL           string `json:"detailUrl,omitempty"`
 	Name                string `json:"name"`
 	MainCompanyID       string `json:"mainCompanyId,omitempty"`
 	MainCompanyName     string `json:"mainCompanyName,omitempty"`

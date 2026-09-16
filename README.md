@@ -72,6 +72,7 @@ go install ./cmd/qc
 [
   {
     "id": "3f603703d59a04cb",
+    "detailUrl": "https://www.qcc.com/firm/3f603703d59a04cb.html",
     "name": "百度在线网络技术（北京）有限公司"
   }
 ]

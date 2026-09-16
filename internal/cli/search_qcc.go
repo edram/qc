@@ -117,6 +117,7 @@ func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter 
 		}
 		enterprises = append(enterprises, models.Enterprise{
 			ID:                  enterprise.KeyNo,
+			DetailURL:           "https://www.qcc.com/firm/" + enterprise.KeyNo + ".html",
 			Name:                qccText(enterprise.Name),
 			RegistrationNumber:  enterprise.No,
 			CreditCode:          qccText(enterprise.CreditCode),
@@ -156,6 +157,7 @@ func (s *searchQCC) SearchPeople(ctx context.Context, query string, filter perso
 	for _, person := range result.Result {
 		people = append(people, models.Person{
 			ID:                  person.ID,
+			DetailURL:           "https://www.qcc.com/pl/" + person.ID + ".html",
 			Name:                qccText(person.Name),
 			MainCompanyID:       person.MainCompany.KeyNo,
 			MainCompanyName:     qccText(person.MainCompany.Company),
