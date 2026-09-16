@@ -97,6 +97,37 @@ qc search ents "百度" --source qcc --source aiqicha
 
 爱企查尚未接入，因此当前应显式使用 `--source qcc`。
 
+### 搜索筛选
+
+企业搜索支持按查找范围、省份、国标行业和登记状态筛选。例如，查找北京建筑业中经营范围包含“建筑”的存续企业：
+
+```console
+qc search ents "建筑" --source qcc \
+  --match scope \
+  --area 北京市 \
+  --industry 建筑业 \
+  --status active
+```
+
+企业筛选参数可以重复使用，也可以传入逗号分隔的多个值：
+
+| 参数 | 可用值 |
+| --- | --- |
+| `--match` | `name`、`scope`、`introduction`、`address`、`brand`、`legal-representative`、`patent`、`trademark`、`shareholder`、`key-personnel` |
+| `--area` | 企查查页面显示的省份名称或省份代码，例如 `北京市`、`BJ` |
+| `--industry` | 国标行业门类名称或代码，例如 `建筑业`、`E` |
+| `--status` | `active`、`moved`、`establishing`、`cancelled`、`revoked` |
+
+不传 `--match` 时默认只匹配企业名。状态值依次对应存续/在业、迁出、设立、注销和吊销。
+
+人员搜索支持页面中的省份地区和国标行业筛选。层级名称之间使用空格连接：
+
+```console
+qc search pers "李彦宏" --source qcc \
+  --area "广东省 深圳市" \
+  --industry "信息传输、软件和信息技术服务业"
+```
+
 ## Profile
 
 全局 `--profile` 用于选择 qc 的配置和 Cookie 命名空间，默认值为 `default`。也可以通过 `QC_PROFILE` 设置默认 profile。

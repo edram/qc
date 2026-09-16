@@ -3,8 +3,10 @@ package cli
 import (
 	"bytes"
 	"context"
+	"reflect"
 	"testing"
 
+	"github.com/alecthomas/kong"
 	"github.com/edram/qi/internal/models"
 )
 
@@ -13,11 +15,26 @@ type searchStub struct {
 	people      []models.Person
 }
 
-func (s searchStub) SearchEnterprises(context.Context, string) ([]models.Enterprise, error) {
+type searchFilterStub struct {
+	enterprise enterpriseSearchFilter
+	person     personSearchFilter
+}
+
+func (s *searchFilterStub) SearchEnterprises(_ context.Context, _ string, filter enterpriseSearchFilter) ([]models.Enterprise, error) {
+	s.enterprise = filter
+	return nil, nil
+}
+
+func (s *searchFilterStub) SearchPeople(_ context.Context, _ string, filter personSearchFilter) ([]models.Person, error) {
+	s.person = filter
+	return nil, nil
+}
+
+func (s searchStub) SearchEnterprises(context.Context, string, enterpriseSearchFilter) ([]models.Enterprise, error) {
 	return s.enterprises, nil
 }
 
-func (s searchStub) SearchPeople(context.Context, string) ([]models.Person, error) {
+func (s searchStub) SearchPeople(context.Context, string, personSearchFilter) ([]models.Person, error) {
 	return s.people, nil
 }
 
@@ -60,5 +77,63 @@ func TestSearchEnterprisesWritesModels(t *testing.T) {
 	const want = `[{"id":"3f603703d59a04cb","name":"百度在线网络技术（北京）有限公司"}]` + "\n"
 	if got := output.String(); got != want {
 		t.Fatalf("output = %q, want %q", got, want)
+	}
+}
+
+func TestSearchEnterpriseFiltersReachProvider(t *testing.T) {
+	command := New()
+	parser, err := kong.New(command, kong.Name("qc"), kong.Exit(func(int) {}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, err := parser.Parse([]string{
+		"search", "ents", "建筑", "--source", "qcc",
+		"--match", "scope", "--area", "北京市", "--industry", "建筑业", "--status", "active",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	searcher := &searchFilterStub{}
+	command.Search.qcc = searcher
+	command.Search.output = &bytes.Buffer{}
+	if err := ctx.Run(); err != nil {
+		t.Fatal(err)
+	}
+	want := enterpriseSearchFilter{
+		Fields:     []enterpriseSearchField{enterpriseSearchFieldScope},
+		Areas:      []string{"北京市"},
+		Industries: []string{"建筑业"},
+		Statuses:   []enterpriseSearchStatus{enterpriseSearchStatusActive},
+	}
+	if !reflect.DeepEqual(searcher.enterprise, want) {
+		t.Fatalf("enterprise filter = %#v, want %#v", searcher.enterprise, want)
+	}
+}
+
+func TestSearchPeopleFiltersReachProvider(t *testing.T) {
+	command := New()
+	parser, err := kong.New(command, kong.Name("qc"), kong.Exit(func(int) {}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, err := parser.Parse([]string{
+		"search", "pers", "李彦宏", "--source", "qcc",
+		"--area", "广东省 深圳市", "--industry", "信息传输、软件和信息技术服务业",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	searcher := &searchFilterStub{}
+	command.Search.qcc = searcher
+	command.Search.output = &bytes.Buffer{}
+	if err := ctx.Run(); err != nil {
+		t.Fatal(err)
+	}
+	want := personSearchFilter{
+		Area:     "广东省 深圳市",
+		Industry: "信息传输、软件和信息技术服务业",
+	}
+	if searcher.person != want {
+		t.Fatalf("person filter = %#v, want %#v", searcher.person, want)
 	}
 }

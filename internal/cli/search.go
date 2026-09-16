@@ -13,8 +13,45 @@ type searchSourceName string
 
 // search is the provider-independent behavior used by the search commands.
 type search interface {
-	SearchEnterprises(context.Context, string) ([]models.Enterprise, error)
-	SearchPeople(context.Context, string) ([]models.Person, error)
+	SearchEnterprises(context.Context, string, enterpriseSearchFilter) ([]models.Enterprise, error)
+	SearchPeople(context.Context, string, personSearchFilter) ([]models.Person, error)
+}
+
+type enterpriseSearchField string
+
+const (
+	enterpriseSearchFieldName                enterpriseSearchField = "name"
+	enterpriseSearchFieldScope               enterpriseSearchField = "scope"
+	enterpriseSearchFieldIntroduction        enterpriseSearchField = "introduction"
+	enterpriseSearchFieldAddress             enterpriseSearchField = "address"
+	enterpriseSearchFieldBrand               enterpriseSearchField = "brand"
+	enterpriseSearchFieldLegalRepresentative enterpriseSearchField = "legal-representative"
+	enterpriseSearchFieldPatent              enterpriseSearchField = "patent"
+	enterpriseSearchFieldTrademark           enterpriseSearchField = "trademark"
+	enterpriseSearchFieldShareholder         enterpriseSearchField = "shareholder"
+	enterpriseSearchFieldKeyPersonnel        enterpriseSearchField = "key-personnel"
+)
+
+type enterpriseSearchStatus string
+
+const (
+	enterpriseSearchStatusActive       enterpriseSearchStatus = "active"
+	enterpriseSearchStatusMoved        enterpriseSearchStatus = "moved"
+	enterpriseSearchStatusEstablishing enterpriseSearchStatus = "establishing"
+	enterpriseSearchStatusCancelled    enterpriseSearchStatus = "cancelled"
+	enterpriseSearchStatusRevoked      enterpriseSearchStatus = "revoked"
+)
+
+type enterpriseSearchFilter struct {
+	Fields     []enterpriseSearchField
+	Areas      []string
+	Industries []string
+	Statuses   []enterpriseSearchStatus
+}
+
+type personSearchFilter struct {
+	Area     string
+	Industry string
 }
 
 type SearchCmd struct {
@@ -50,7 +87,13 @@ type SearchArgs struct {
 	Query string `arg:"" required:"" name:"query" help:"Name to search."`
 }
 
-type SearchEntsCmd struct{ SearchArgs }
+type SearchEntsCmd struct {
+	SearchArgs
+	Fields     []enterpriseSearchField  `name:"match" enum:"name,scope,introduction,address,brand,legal-representative,patent,trademark,shareholder,key-personnel" help:"Fields to match (${enum}); repeat to select multiple."`
+	Areas      []string                 `name:"area" help:"Province name or QCC province code; repeat to select multiple."`
+	Industries []string                 `name:"industry" help:"Top-level national industry name or code; repeat to select multiple."`
+	Statuses   []enterpriseSearchStatus `name:"status" enum:"active,moved,establishing,cancelled,revoked" help:"Registration status (${enum}); repeat to select multiple."`
+}
 
 func (cmd *SearchEntsCmd) Run(searchCmd *SearchCmd) error {
 	enterprises := make([]models.Enterprise, 0)
@@ -59,7 +102,12 @@ func (cmd *SearchEntsCmd) Run(searchCmd *SearchCmd) error {
 		if err != nil {
 			return err
 		}
-		found, err := searcher.SearchEnterprises(context.Background(), cmd.Query)
+		found, err := searcher.SearchEnterprises(context.Background(), cmd.Query, enterpriseSearchFilter{
+			Fields:     cmd.Fields,
+			Areas:      cmd.Areas,
+			Industries: cmd.Industries,
+			Statuses:   cmd.Statuses,
+		})
 		if err != nil {
 			return err
 		}
@@ -68,7 +116,11 @@ func (cmd *SearchEntsCmd) Run(searchCmd *SearchCmd) error {
 	return json.NewEncoder(searchCmd.output).Encode(enterprises)
 }
 
-type SearchPersCmd struct{ SearchArgs }
+type SearchPersCmd struct {
+	SearchArgs
+	Area     string `help:"Area path as displayed by QCC, for example '广东省 深圳市'."`
+	Industry string `help:"Industry path as displayed by QCC."`
+}
 
 func (cmd *SearchPersCmd) Run(searchCmd *SearchCmd) error {
 	people := make([]models.Person, 0)
@@ -77,7 +129,10 @@ func (cmd *SearchPersCmd) Run(searchCmd *SearchCmd) error {
 		if err != nil {
 			return err
 		}
-		found, err := searcher.SearchPeople(context.Background(), cmd.Query)
+		found, err := searcher.SearchPeople(context.Background(), cmd.Query, personSearchFilter{
+			Area:     cmd.Area,
+			Industry: cmd.Industry,
+		})
 		if err != nil {
 			return err
 		}

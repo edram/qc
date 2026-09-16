@@ -35,7 +35,7 @@ func TestSearchQCCEnterprisesRejectsProviderError(t *testing.T) {
 		CookieSource: emptyCookieSource{},
 	})}
 
-	_, err := searcher.SearchEnterprises(context.Background(), "百度")
+	_, err := searcher.SearchEnterprises(context.Background(), "百度", enterpriseSearchFilter{})
 	if err == nil || !strings.Contains(err.Error(), "login required") {
 		t.Fatalf("error = %v, want provider error", err)
 	}
@@ -55,7 +55,7 @@ func TestSearchQCCEnterprisesRejectsHTTPError(t *testing.T) {
 		CookieSource: emptyCookieSource{},
 	})}
 
-	_, err := searcher.SearchEnterprises(context.Background(), "百度")
+	_, err := searcher.SearchEnterprises(context.Background(), "百度", enterpriseSearchFilter{})
 	if err == nil || !strings.Contains(err.Error(), "502 Bad Gateway") {
 		t.Fatalf("error = %v, want HTTP status", err)
 	}
@@ -111,7 +111,7 @@ func TestSearchQCCEnterprises(t *testing.T) {
 		CookieSource: emptyCookieSource{},
 	})}
 
-	got, err := searcher.SearchEnterprises(context.Background(), "百度")
+	got, err := searcher.SearchEnterprises(context.Background(), "百度", enterpriseSearchFilter{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,6 +131,40 @@ func TestSearchQCCEnterprises(t *testing.T) {
 	}}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("SearchEnterprises() = %#v, want %#v", got, want)
+	}
+}
+
+func TestSearchQCCEnterpriseFilters(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request qccEnterpriseSearchRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatal(err)
+		}
+		if request.SearchKey != `{"scope":"建筑"}` {
+			t.Fatalf("searchKey = %q", request.SearchKey)
+		}
+		if request.Filter != `{"r":[{"pr":"BJ"}],"i":["E"],"s":["20","10","50"]}` {
+			t.Fatalf("filter = %q", request.Filter)
+		}
+		_, _ = w.Write([]byte(`{"Status":200,"Result":[]}`))
+	}))
+	defer server.Close()
+
+	searcher := &searchQCC{api: qcc.New(qcc.Options{
+		BaseURL:      server.URL,
+		PID:          "pid",
+		TID:          "tid",
+		UserAgent:    qccTestUserAgent,
+		CookieSource: emptyCookieSource{},
+	})}
+	_, err := searcher.SearchEnterprises(context.Background(), "建筑", enterpriseSearchFilter{
+		Fields:     []enterpriseSearchField{enterpriseSearchFieldScope},
+		Areas:      []string{"北京市"},
+		Industries: []string{"建筑业"},
+		Statuses:   []enterpriseSearchStatus{enterpriseSearchStatusActive},
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -185,7 +219,7 @@ func TestSearchQCCPeople(t *testing.T) {
 		CookieSource: emptyCookieSource{},
 	})}
 
-	got, err := searcher.SearchPeople(context.Background(), "李彦宏")
+	got, err := searcher.SearchPeople(context.Background(), "李彦宏", personSearchFilter{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -202,5 +236,34 @@ func TestSearchQCCPeople(t *testing.T) {
 	}}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("SearchPeople() = %#v, want %#v", got, want)
+	}
+}
+
+func TestSearchQCCPeopleFilters(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request qccPersonSearchRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatal(err)
+		}
+		if request.AreaInfo != "广东省 深圳市" || request.IndustryInfo != "信息传输、软件和信息技术服务业" {
+			t.Fatalf("request = %#v", request)
+		}
+		_, _ = w.Write([]byte(`{"Status":200,"Result":[]}`))
+	}))
+	defer server.Close()
+
+	searcher := &searchQCC{api: qcc.New(qcc.Options{
+		BaseURL:      server.URL,
+		PID:          "pid",
+		TID:          "tid",
+		UserAgent:    qccTestUserAgent,
+		CookieSource: emptyCookieSource{},
+	})}
+	_, err := searcher.SearchPeople(context.Background(), "李彦宏", personSearchFilter{
+		Area:     "广东省 深圳市",
+		Industry: "信息传输、软件和信息技术服务业",
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 }

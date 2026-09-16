@@ -28,6 +28,7 @@ type qccEnterpriseSearchRequest struct {
 	PageIndex   int    `json:"pageIndex"`
 	PageSize    int    `json:"pageSize"`
 	SearchIndex string `json:"searchIndex"`
+	Filter      string `json:"filter,omitempty"`
 }
 
 type qccEnterpriseSearchResponse struct {
@@ -83,18 +84,21 @@ func newSearchQCC(profile, userAgent string) search {
 	return &searchQCC{api: qcc.New(qcc.Options{Profile: profile, UserAgent: userAgent})}
 }
 
-func (s *searchQCC) SearchEnterprises(ctx context.Context, query string) ([]models.Enterprise, error) {
-	searchKey, err := json.Marshal(struct {
-		OnlyName string `json:"onlyname"`
-	}{OnlyName: query})
+func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter enterpriseSearchFilter) ([]models.Enterprise, error) {
+	searchKey, err := qccEnterpriseSearchKey(query, filter.Fields)
+	if err != nil {
+		return nil, err
+	}
+	encodedFilter, err := qccEnterpriseSearchFilter(filter)
 	if err != nil {
 		return nil, err
 	}
 	request := qccEnterpriseSearchRequest{
-		SearchKey:   string(searchKey),
+		SearchKey:   searchKey,
 		PageIndex:   1,
 		PageSize:    20,
 		SearchIndex: "multicondition",
+		Filter:      encodedFilter,
 	}
 
 	var result qccEnterpriseSearchResponse
@@ -129,11 +133,11 @@ func (s *searchQCC) SearchEnterprises(ctx context.Context, query string) ([]mode
 	return enterprises, nil
 }
 
-func (s *searchQCC) SearchPeople(ctx context.Context, query string) ([]models.Person, error) {
+func (s *searchQCC) SearchPeople(ctx context.Context, query string, filter personSearchFilter) ([]models.Person, error) {
 	request := qccPersonSearchRequest{
 		Key:          query,
-		AreaInfo:     "",
-		IndustryInfo: "",
+		AreaInfo:     strings.TrimSpace(filter.Area),
+		IndustryInfo: strings.TrimSpace(filter.Industry),
 		PageIndex:    1,
 		Status:       []int{0, 1},
 		Name:         query,
