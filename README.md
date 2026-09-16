@@ -1,89 +1,207 @@
 # qc
 
-`qc` 是一个企查命令行工具。目前支持通过企查查搜索企业和人员，并将结果转换为统一模型后输出 JSON。
+`qc` 是一个面向命令行和自动化脚本的企业信息查询工具。它从本地浏览器同步登录 Cookie，通过企查查搜索企业或人员，并输出结构稳定的 JSON。
+
+当前状态：企查查企业搜索和人员搜索可用；爱企查数据源尚未接入。
+
+## 功能
+
+- 按企业名称搜索企业信息
+- 按姓名搜索人员及关联企业信息
+- 将不同数据源的响应转换为统一 JSON 模型
+- 从 Chrome、Brave、Edge、Firefox 或 Safari 同步企查查 Cookie
+- 使用 profile 隔离工作、个人等不同登录会话
+- 查看 Cookie 元数据和当前企查查账号，不输出 Cookie 值
+
+## 安装
+
+从 [GitHub Releases](https://github.com/edram/qc/releases) 下载适合当前系统和架构的压缩包，解压后将 `qc` 放入 `PATH`。
+
+从源码构建需要 Go 1.25 或更高版本：
+
+```console
+git clone https://github.com/edram/qc.git
+cd qc
+go install ./cmd/qc
+```
+
+## 快速开始
+
+企查查会校验登录 Cookie 对应的浏览器 User-Agent。两者不一致可能导致 `QCCSESSID` 更新，并使浏览器退出登录。因此，首次使用时必须保存当前登录浏览器的真实 User-Agent。
+
+1. 在已登录企查查的浏览器中打开开发者工具，在 Console 执行：
+
+   ```javascript
+   navigator.userAgent
+   ```
+
+2. 保存输出的完整 User-Agent：
+
+   ```console
+   qc config set user-agent "Mozilla/5.0 ..."
+   ```
+
+3. 从同一个浏览器同步企查查 Cookie：
+
+   ```console
+   qc auth import --browser chrome
+   ```
+
+   如果登录账号位于 Chrome 的其他用户目录，请指定浏览器 profile：
+
+   ```console
+   qc auth import --browser chrome --browser-profile "Profile 1"
+   ```
+
+4. 检查当前会话：
+
+   ```console
+   qc status
+   ```
+
+5. 搜索企业或人员：
+
+   ```console
+   qc search ents "百度" --source qcc
+   qc search pers "李彦宏" --source qcc
+   ```
+
+企业搜索的 JSON 结构示例：
+
+```json
+[
+  {
+    "id": "3f603703d59a04cb",
+    "name": "百度在线网络技术（北京）有限公司"
+  }
+]
+```
+
+## 命令
+
+| 命令 | 说明 |
+| --- | --- |
+| `qc auth import` | 从浏览器同步企查查 Cookie |
+| `qc config set user-agent <value>` | 保存当前 profile 的浏览器 User-Agent |
+| `qc status` | 显示当前 profile、Cookie 元数据和账号状态 |
+| `qc search ents <query>` | 搜索企业 |
+| `qc search pers <query>` | 搜索人员 |
+| `qc --help` | 查看完整命令帮助 |
+
+`--source` 可以重复使用，也接受逗号分隔的值：
+
+```console
+qc search ents "百度" --source qcc
+qc search ents "百度" --source qcc --source aiqicha
+```
+
+爱企查尚未接入，因此当前应显式使用 `--source qcc`。
+
+## Profile
+
+全局 `--profile` 用于选择 qc 的配置和 Cookie 命名空间，默认值为 `default`。也可以通过 `QC_PROFILE` 设置默认 profile。
+
+```console
+qc --profile work config set user-agent "Mozilla/5.0 ..."
+qc --profile work auth import --browser chrome --browser-profile "Profile 1"
+qc --profile work status
+qc --profile work search ents "百度" --source qcc
+```
+
+以下三个参数用途不同：
+
+| 参数 | 作用 |
+| --- | --- |
+| `--profile work` | 选择 qc 的 `work` 配置和 Cookie |
+| `--browser chrome` | 选择 Cookie 来源浏览器 |
+| `--browser-profile "Profile 1"` | 选择浏览器内部的用户目录 |
+
+## 配置与优先级
+
+User-Agent 的优先级为：
+
+```text
+--user-agent > config.<profile>.json > config.default.json
+```
+
+非 default profile 会继承 `config.default.json`，再用自己的非空字段覆盖默认配置。`config set` 只修改当前 profile，不会复制继承值。
+
+例如，`work` 可以继承默认 User-Agent，也可以单独覆盖：
 
 ```console
 qc config set user-agent "Mozilla/5.0 ..."
 qc --profile work config set user-agent "Mozilla/5.0 ..."
-qc auth import --browser chrome
-qc --profile work auth import --browser chrome --browser-profile "Profile 1"
-qc --user-agent "Mozilla/5.0 ..." status
-qc status
-qc --profile work status
-qc search ents "百度"
-qc search pers "李彦宏"
-qc --profile work search ents "百度" --source qcc
-qc search ents "百度" --source qcc
-qc search pers "李彦宏" --source qcc
-qc search ents "百度" --source qcc --source aiqicha
 ```
 
-企查查企业和人员搜索已可用；爱企查数据源仍待接入。
+也可以只为单次命令覆盖 User-Agent，不写入配置：
 
-`--profile` 选择认证 profile，默认值为 `default`，也可通过 `QC_PROFILE` 设置。profile 决定 Cookie 缓存文件，例如 `qcc.default.json` 或 `qcc.work.json`；status、搜索和后续请求共享同一 profile。
+```console
+qc --user-agent "Mozilla/5.0 ..." status
+```
 
-`qc auth import` 从浏览器同步企查查 Cookie 到当前认证 profile。`--browser` 选择浏览器，默认是 Chrome；`--browser-profile` 选择浏览器内部的用户目录。它和全局 `--profile` 含义不同，例如 `qc --profile work auth import --browser chrome --browser-profile "Profile 1"` 会从 Chrome 的 `Profile 1` 读取，并写入 qc 的 `work` 缓存。
+配置目录遵循操作系统的用户配置目录：
 
-企查查请求必须显式配置与登录 Cookie 对应浏览器一致的 User-Agent，否则企查查可能更新会话并要求重新登录。使用 `qc config set user-agent "Mozilla/5.0 ..."` 保存到当前 profile，或为单次命令传入 `--user-agent "Mozilla/5.0 ..."`。配置文件只按 profile 区分，例如 `config.default.json`、`config.work.json`，其中的设置由各数据源共享；读取非 default profile 时会先载入 default 配置，再合并当前 profile 中已设置的字段。未设置时，qc 会在发送企查查请求前报错并给出设置提示；程序的兜底 User-Agent 不用于企查查。
+| 系统 | 目录 |
+| --- | --- |
+| macOS | `~/Library/Application Support/qc` |
+| Linux | `~/.config/qc` |
+| Windows | `%AppData%\qc` |
 
-`qc status` 显示当前 profile、Cookie 清单和各数据源的当前账号。Cookie 区块列出请求使用的安全元数据；企查查账号区块通过身份接口验证当前用户，爱企查账号暂时标记为尚未接入。Cookie 值不会输出，手机号和邮箱会脱敏。
-
-## 技术栈
-
-- Go 1.25：生成单文件可执行程序，启动快，适合跨平台分发。
-- Kong：通过 Go struct 和 tag 定义多级命令，直接把位置参数映射为有类型的字段。
-- Go 标准库 `testing`：验证命令行为及服务端请求、响应映射，不引入额外测试依赖。
-
-`--source` 是可重复的可选参数，也接受逗号分隔的值；不传时默认使用 `qcc` 和 `aiqicha`。企查查数据源使用标准库 HTTP 客户端；当前不引入表格渲染和日志库。
-
-命令树由 Kong 的嵌套 struct 明确定义：`search` 是一级命令，`ents` 和 `pers` 是它的两个子命令，`<query>` 才是叶子命令的位置参数。
-
-## 文件结构
+典型文件如下：
 
 ```text
-.
-├── cmd/qc/main.go                 # 可执行程序入口，只处理进程退出
-├── internal/cli/
-│   ├── cli.go                     # Kong 根命令模型
-│   ├── run.go                     # 解析、执行和退出码处理
-│   ├── run_test.go                # 命令树和 CLI 行为测试
-│   ├── auth.go                    # 从浏览器同步 Cookie
-│   ├── config.go                  # 按 profile 设置持久配置
-│   ├── status.go                  # 聚合并显示各数据源状态
-│   ├── status_cookies.go          # 各数据源 Cookie 元数据
-│   ├── status_qcc.go              # 企查查当前账号
-│   ├── status_aiqicha.go          # 爱企查当前账号（待接入）
-│   ├── search.go                  # search 命令和数据源接口
-│   ├── search_qcc.go              # 接入企查查客户端
-│   └── search_aiqicha.go          # 接入爱企查客户端
-├── internal/qcc/
-│   ├── api.go                     # 企查查 HTTP 客户端
-│   └── auth.go                    # 安全 Cookie 元数据和账号身份
-├── internal/config/config.go      # profile 配置文件读写
-├── internal/aiqicha/api.go        # 爱企查客户端（待接入）
-├── internal/models/
-│   ├── enterprise.go              # 统一的企业领域模型
-│   └── person.go                  # 统一的人员领域模型
-├── go.mod
-└── README.md
+qc/
+├── config.default.json
+├── config.work.json
+└── cookies/
+    ├── qcc.default.json
+    └── qcc.work.json
 ```
 
-`qcc.Client` 和 `aiqicha.Client` 各自负责对接自己的服务端。CLI 在 `search.go` 定义抽象的 `search` 接口并装配两个实现；`search_qcc.go` 将企查查响应转换为 `models.Enterprise` 或 `models.Person`，搜索命令将模型数组输出为 JSON。
+配置只按 profile 区分，并由所有数据源共享；Cookie 同时按数据源和 profile 隔离。配置文件和 Cookie 缓存可能包含敏感信息，不应提交到版本控制或公开分享。
+
+## 会话诊断
+
+运行以下命令检查当前 profile 使用的 Cookie 和账号：
+
+```console
+qc status
+```
+
+输出包含：
+
+- 当前 qc profile
+- 各数据源的 Cookie 名称、域名、路径、过期时间和安全属性
+- 当前企查查账号状态及脱敏后的手机号、邮箱
+- 尚未接入的数据源状态
+
+`qc status` 不会显示 Cookie 值。如果企查查提示重新登录，请确认 User-Agent 来自导入 Cookie 的同一浏览器和同一浏览器 profile，然后重新登录并再次运行 `qc auth import`。
 
 ## 开发
 
 ```console
 go run ./cmd/qc --help
-go test ./...
+go test -skip '^TestManual' ./...
+go vet ./...
+```
+
+`TestManualSearchMulti` 会使用本机配置和 Cookie 真实请求企查查，只应在需要手动验证接口时单独运行：
+
+```console
+go test -run '^TestManualSearchMulti$' -v ./internal/qcc
 ```
 
 ## 发布
 
-推送语义化版本标签后，GitHub Actions 会构建 macOS、Linux 和 Windows 的 amd64、arm64 版本，并将压缩包和校验文件发布到 GitHub Release：
+推送语义化版本标签后，GitHub Actions 会构建 macOS、Linux 和 Windows 的 amd64、arm64 版本，并发布压缩包和校验文件：
 
 ```console
 git tag v0.1.0
 git push origin v0.1.0
 ```
 
-手动运行 `Release` workflow 只执行 snapshot 构建，不会创建 GitHub Release，可用于验证发布配置。
+手动运行 `Release` workflow 只执行 snapshot 构建，不创建 GitHub Release。
+
+## License
+
+本项目使用 [MIT License](LICENSE)。
