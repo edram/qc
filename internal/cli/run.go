@@ -9,6 +9,7 @@ import (
 
 func Execute(args []string, stdout, stderr io.Writer) int {
 	command := New()
+	command.Search.output = stdout
 	exitCode := -1
 	parser, err := kong.New(
 		command,

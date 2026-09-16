@@ -2,7 +2,9 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 
 	"github.com/edram/qi/internal/models"
 )
@@ -22,12 +24,14 @@ type SearchCmd struct {
 
 	qcc     search
 	aiqicha search
+	output  io.Writer
 }
 
 func newSearchCmd() SearchCmd {
 	return SearchCmd{
 		qcc:     newSearchQCC(),
 		aiqicha: newSearchAiqicha(),
+		output:  io.Discard,
 	}
 }
 
@@ -49,29 +53,35 @@ type SearchArgs struct {
 type SearchEntsCmd struct{ SearchArgs }
 
 func (cmd *SearchEntsCmd) Run(searchCmd *SearchCmd) error {
+	enterprises := make([]models.Enterprise, 0)
 	for _, name := range searchCmd.Sources {
 		searcher, err := searchCmd.resolveSource(name)
 		if err != nil {
 			return err
 		}
-		if _, err := searcher.SearchEnterprises(context.Background(), cmd.Query); err != nil {
+		found, err := searcher.SearchEnterprises(context.Background(), cmd.Query)
+		if err != nil {
 			return err
 		}
+		enterprises = append(enterprises, found...)
 	}
-	return nil
+	return json.NewEncoder(searchCmd.output).Encode(enterprises)
 }
 
 type SearchPersCmd struct{ SearchArgs }
 
 func (cmd *SearchPersCmd) Run(searchCmd *SearchCmd) error {
+	people := make([]models.Person, 0)
 	for _, name := range searchCmd.Sources {
 		searcher, err := searchCmd.resolveSource(name)
 		if err != nil {
 			return err
 		}
-		if _, err := searcher.SearchPeople(context.Background(), cmd.Query); err != nil {
+		found, err := searcher.SearchPeople(context.Background(), cmd.Query)
+		if err != nil {
 			return err
 		}
+		people = append(people, found...)
 	}
-	return nil
+	return json.NewEncoder(searchCmd.output).Encode(people)
 }
