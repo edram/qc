@@ -3,14 +3,21 @@
 `qc` 是一个企查命令行工具。目前支持通过企查查搜索企业和人员，并将结果转换为统一模型后输出 JSON。
 
 ```console
+qc status
+qc --profile work status
 qc search ents "百度"
 qc search pers "李彦宏"
+qc --profile work search ents "百度" --source qcc
 qc search ents "百度" --source qcc
 qc search pers "李彦宏" --source qcc
 qc search ents "百度" --source qcc --source aiqicha
 ```
 
 企查查企业和人员搜索已可用；爱企查数据源仍待接入。
+
+`--profile` 选择认证 profile，默认值为 `default`，也可通过 `QC_PROFILE` 设置。profile 决定 Cookie 缓存文件，例如 `qcc.default.json` 或 `qcc.work.json`；status、搜索和后续请求共享同一 profile。
+
+`qc status` 显示当前 profile、Cookie 清单和各数据源的当前账号。Cookie 区块列出请求使用的安全元数据；企查查账号区块通过身份接口验证当前用户，爱企查账号暂时标记为尚未接入。Cookie 值不会输出，手机号和邮箱会脱敏。
 
 ## 技术栈
 
@@ -31,10 +38,16 @@ qc search ents "百度" --source qcc --source aiqicha
 │   ├── cli.go                     # Kong 根命令模型
 │   ├── run.go                     # 解析、执行和退出码处理
 │   ├── run_test.go                # 命令树和 CLI 行为测试
+│   ├── status.go                  # 聚合并显示各数据源状态
+│   ├── status_cookies.go          # 各数据源 Cookie 元数据
+│   ├── status_qcc.go              # 企查查当前账号
+│   ├── status_aiqicha.go          # 爱企查当前账号（待接入）
 │   ├── search.go                  # search 命令和数据源接口
 │   ├── search_qcc.go              # 接入企查查客户端
 │   └── search_aiqicha.go          # 接入爱企查客户端
-├── internal/qcc/api.go            # 企查查 HTTP 客户端
+├── internal/qcc/
+│   ├── api.go                     # 企查查 HTTP 客户端
+│   └── auth.go                    # 安全 Cookie 元数据和账号身份
 ├── internal/aiqicha/api.go        # 爱企查客户端（待接入）
 ├── internal/models/
 │   ├── enterprise.go              # 统一的企业领域模型

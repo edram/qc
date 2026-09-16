@@ -11,7 +11,6 @@ import (
 const (
 	cookieApplicationName = "qc"
 	cookieSourceName      = "qcc"
-	cookieCacheProfile    = "default"
 )
 
 // CookieSource supplies cookies for an outgoing QCC request.
@@ -36,14 +35,16 @@ func (s BrowserCookieSource) Cookies(ctx context.Context) ([]*http.Cookie, error
 	}).Cookies(ctx)
 }
 
-type defaultCookieSource struct{}
-
-func newCookieSource() CookieSource {
-	return defaultCookieSource{}
+type defaultCookieSource struct {
+	profile string
 }
 
-func (defaultCookieSource) Cookies(ctx context.Context) ([]*http.Cookie, error) {
-	path, err := sharedcookies.DefaultPath(cookieApplicationName, cookieSourceName, cookieCacheProfile)
+func newCookieSource(profile string) CookieSource {
+	return defaultCookieSource{profile: profile}
+}
+
+func (s defaultCookieSource) Cookies(ctx context.Context) ([]*http.Cookie, error) {
+	path, err := sharedcookies.DefaultPath(cookieApplicationName, cookieSourceName, s.profile)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,9 @@ package cli
 
 import (
 	"bytes"
+	"context"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -34,6 +37,84 @@ func TestVersion(t *testing.T) {
 	}
 	if got := strings.TrimSpace(stdout.String()); got != "dev" {
 		t.Fatalf("version output = %q, want %q", got, "dev")
+	}
+}
+
+func TestStatusCommandPath(t *testing.T) {
+	parser, err := kong.New(New(), kong.Name("qc"), kong.Exit(func(int) {}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, err := parser.Parse([]string{"status"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := ctx.Command(); got != "status" {
+		t.Fatalf("Command() = %q, want %q", got, "status")
+	}
+}
+
+func TestProfileFlag(t *testing.T) {
+	command := New()
+	parser, err := kong.New(command, kong.Name("qc"), kong.Exit(func(int) {}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := parser.Parse([]string{"--profile", "work", "status"}); err != nil {
+		t.Fatal(err)
+	}
+	if command.Profile != "work" {
+		t.Fatalf("Profile = %q, want %q", command.Profile, "work")
+	}
+}
+
+func TestCLIConfiguresSelectedProfile(t *testing.T) {
+	configDir := t.TempDir()
+	t.Setenv("APPDATA", configDir)
+	t.Setenv("HOME", configDir)
+	t.Setenv("XDG_CONFIG_HOME", configDir)
+	userConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cachePath := filepath.Join(userConfigDir, "qc", "cookies", "qcc.work.json")
+	if err := os.MkdirAll(filepath.Dir(cachePath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(cachePath, []byte(`[{"name":"session","value":"work-cookie","domain":".qcc.com","path":"/"}]`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	command := New()
+	parser, err := kong.New(command, kong.Name("qc"), kong.Exit(func(int) {}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := parser.Parse([]string{"--profile", "work", "status"}); err != nil {
+		t.Fatal(err)
+	}
+	command.configureProfile()
+
+	if command.Status.profile != "work" {
+		t.Fatalf("status profile = %q, want %q", command.Status.profile, "work")
+	}
+	statusCookies, err := command.Status.cookies.Cookies(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(statusCookies.Sources) != 1 || len(statusCookies.Sources[0].Cookies) != 1 || statusCookies.Sources[0].Cookies[0].Name != "session" {
+		t.Fatalf("status cookies = %#v", statusCookies)
+	}
+	searcher, ok := command.Search.qcc.(*searchQCC)
+	if !ok {
+		t.Fatalf("QCC searcher = %T", command.Search.qcc)
+	}
+	searchCookies, err := searcher.api.CookieInfo(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(searchCookies) != 1 || searchCookies[0].Name != "session" {
+		t.Fatalf("search cookies = %#v", searchCookies)
 	}
 }
 

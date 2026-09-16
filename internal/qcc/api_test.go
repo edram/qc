@@ -193,3 +193,40 @@ func TestClientRefreshesExpiredCookieCache(t *testing.T) {
 		t.Fatalf("browser reads = %d, want 1", browserReads)
 	}
 }
+
+func TestClientUsesSelectedCookieProfile(t *testing.T) {
+	configDir := t.TempDir()
+	t.Setenv("APPDATA", configDir)
+	t.Setenv("HOME", configDir)
+	t.Setenv("XDG_CONFIG_HOME", configDir)
+	userConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cachePath := filepath.Join(userConfigDir, "qc", "cookies", "qcc.work.json")
+	if err := os.MkdirAll(filepath.Dir(cachePath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(cachePath, []byte(`[{"name":"session","value":"work-cookie","domain":".qcc.com","path":"/"}]`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session")
+		if err != nil || cookie.Value != "work-cookie" {
+			t.Errorf("session cookie = %v, %v", cookie, err)
+		}
+	}))
+	defer server.Close()
+
+	response, err := New(Options{
+		BaseURL: server.URL,
+		PID:     "pid",
+		TID:     "tid",
+		Profile: "work",
+	}).Get(context.Background(), "/companies")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response.Body.Close()
+}

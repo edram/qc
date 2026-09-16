@@ -19,13 +19,14 @@ const (
 
 // Options configures a client. BaseURL defaults to the QCC host.
 // PID and TID override the identifiers discovered from BaseURL.
-// CookieSource overrides the default browser-backed cookie cache.
+// Profile selects the browser-backed cookie cache; CookieSource overrides it.
 type Options struct {
 	BaseURL      string
 	HTTPClient   *http.Client
 	Timeout      time.Duration
 	TID          string
 	PID          string
+	Profile      string
 	CookieSource CookieSource
 }
 
@@ -47,7 +48,7 @@ func New(options Options) *Client {
 	}
 	cookieSource := options.CookieSource
 	if cookieSource == nil {
-		cookieSource = newCookieSource()
+		cookieSource = newCookieSource(options.Profile)
 	}
 
 	httpClient := options.HTTPClient

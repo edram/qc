@@ -79,8 +79,8 @@ type qccPersonSearchResponse struct {
 	} `json:"Result"`
 }
 
-func newSearchQCC() search {
-	return &searchQCC{api: qcc.New(qcc.Options{})}
+func newSearchQCC(profile string) search {
+	return &searchQCC{api: qcc.New(qcc.Options{Profile: profile})}
 }
 
 func (s *searchQCC) SearchEnterprises(ctx context.Context, query string) ([]models.Enterprise, error) {

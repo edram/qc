@@ -27,9 +27,9 @@ type SearchCmd struct {
 	output  io.Writer
 }
 
-func newSearchCmd() SearchCmd {
+func newSearchCmd(profile string) SearchCmd {
 	return SearchCmd{
-		qcc:     newSearchQCC(),
+		qcc:     newSearchQCC(profile),
 		aiqicha: newSearchAiqicha(),
 		output:  io.Discard,
 	}

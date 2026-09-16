@@ -34,3 +34,11 @@ func TestDefaultPathSeparatesProfiles(t *testing.T) {
 		t.Fatalf("profile path = %q, want %q", path, want)
 	}
 }
+
+func TestDefaultPathRejectsUnsafeProfiles(t *testing.T) {
+	for _, profile := range []string{".", "..", "../work", "work/personal", `work\personal`} {
+		if _, err := DefaultPath("qc", "qcc", profile); err == nil {
+			t.Errorf("DefaultPath() error = nil for profile %q", profile)
+		}
+	}
+}

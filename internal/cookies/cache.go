@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // CachedSource reads a JSON cache before falling back to Source and updating it.
@@ -41,6 +42,9 @@ func (s CachedSource) Cookies(ctx context.Context) ([]*http.Cookie, error) {
 func DefaultPath(application, source, profile string) (string, error) {
 	if profile == "" {
 		profile = "default"
+	}
+	if profile == "." || profile == ".." || strings.ContainsAny(profile, `/\`) {
+		return "", fmt.Errorf("invalid cookie profile %q", profile)
 	}
 	base, err := os.UserConfigDir()
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 func Execute(args []string, stdout, stderr io.Writer) int {
 	command := New()
 	command.Search.output = stdout
+	command.Status.output = stdout
 	exitCode := -1
 	parser, err := kong.New(
 		command,
@@ -35,6 +36,7 @@ func Execute(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintln(stderr, err)
 		return 2
 	}
+	command.configureProfile()
 	if err := ctx.Run(); err != nil {
 		_, _ = fmt.Fprintln(stderr, err)
 		return 1
