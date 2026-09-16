@@ -3,6 +3,8 @@
 `qc` 是一个企查命令行工具。目前支持通过企查查搜索企业和人员，并将结果转换为统一模型后输出 JSON。
 
 ```console
+qc auth import --browser chrome
+qc --profile work auth import --browser chrome --browser-profile "Profile 1"
 qc status
 qc --profile work status
 qc search ents "百度"
@@ -16,6 +18,8 @@ qc search ents "百度" --source qcc --source aiqicha
 企查查企业和人员搜索已可用；爱企查数据源仍待接入。
 
 `--profile` 选择认证 profile，默认值为 `default`，也可通过 `QC_PROFILE` 设置。profile 决定 Cookie 缓存文件，例如 `qcc.default.json` 或 `qcc.work.json`；status、搜索和后续请求共享同一 profile。
+
+`qc auth import` 从浏览器同步企查查 Cookie 到当前认证 profile。`--browser` 选择浏览器，默认是 Chrome；`--browser-profile` 选择浏览器内部的用户目录。它和全局 `--profile` 含义不同，例如 `qc --profile work auth import --browser chrome --browser-profile "Profile 1"` 会从 Chrome 的 `Profile 1` 读取，并写入 qc 的 `work` 缓存。
 
 `qc status` 显示当前 profile、Cookie 清单和各数据源的当前账号。Cookie 区块列出请求使用的安全元数据；企查查账号区块通过身份接口验证当前用户，爱企查账号暂时标记为尚未接入。Cookie 值不会输出，手机号和邮箱会脱敏。
 
@@ -38,6 +42,7 @@ qc search ents "百度" --source qcc --source aiqicha
 │   ├── cli.go                     # Kong 根命令模型
 │   ├── run.go                     # 解析、执行和退出码处理
 │   ├── run_test.go                # 命令树和 CLI 行为测试
+│   ├── auth.go                    # 从浏览器同步 Cookie
 │   ├── status.go                  # 聚合并显示各数据源状态
 │   ├── status_cookies.go          # 各数据源 Cookie 元数据
 │   ├── status_qcc.go              # 企查查当前账号

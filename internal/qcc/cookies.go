@@ -44,7 +44,7 @@ func newCookieSource(profile string) CookieSource {
 }
 
 func (s defaultCookieSource) Cookies(ctx context.Context) ([]*http.Cookie, error) {
-	path, err := sharedcookies.DefaultPath(cookieApplicationName, cookieSourceName, s.profile)
+	path, err := cookieCachePath(s.profile)
 	if err != nil {
 		return nil, err
 	}
@@ -52,4 +52,27 @@ func (s defaultCookieSource) Cookies(ctx context.Context) ([]*http.Cookie, error
 		Path:   path,
 		Source: BrowserCookieSource{},
 	}).Cookies(ctx)
+}
+
+// ImportBrowserCookies replaces the selected profile's cache with cookies from a browser profile.
+func ImportBrowserCookies(ctx context.Context, profile string, browser sweetcookie.Browser, browserProfile string) (int, string, error) {
+	cookies, err := (BrowserCookieSource{
+		Browser: browser,
+		Profile: browserProfile,
+	}).Cookies(ctx)
+	if err != nil {
+		return 0, "", err
+	}
+	path, err := cookieCachePath(profile)
+	if err != nil {
+		return 0, "", err
+	}
+	if err := sharedcookies.Write(path, cookies); err != nil {
+		return 0, "", err
+	}
+	return len(cookies), path, nil
+}
+
+func cookieCachePath(profile string) (string, error) {
+	return sharedcookies.DefaultPath(cookieApplicationName, cookieSourceName, profile)
 }

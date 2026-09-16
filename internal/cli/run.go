@@ -9,6 +9,7 @@ import (
 
 func Execute(args []string, stdout, stderr io.Writer) int {
 	command := New()
+	command.Auth.Import.output = stdout
 	command.Search.output = stdout
 	command.Status.output = stdout
 	exitCode := -1

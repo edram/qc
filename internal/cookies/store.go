@@ -46,7 +46,8 @@ func readFile(path string) ([]*http.Cookie, error) {
 	return cookies, nil
 }
 
-func writeFile(path string, cookies []*http.Cookie) error {
+// Write stores cookies in the JSON cache format used by CachedSource.
+func Write(path string, cookies []*http.Cookie) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}

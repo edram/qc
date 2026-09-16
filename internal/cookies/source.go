@@ -3,7 +3,9 @@ package cookies
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/steipete/sweetcookie"
@@ -44,6 +46,11 @@ func (s BrowserSource) Cookies(ctx context.Context) ([]*http.Cookie, error) {
 		return nil, err
 	}
 	if len(result.Cookies) == 0 {
+		// Preserve sweetcookie diagnostics so users can distinguish missing profiles and decryption failures.
+		// Based on: https://github.com/openclaw/spogo/blob/3d4edc230f5ece848b81642e95f3682f3ed3e8d7/internal/cookies/source.go
+		if len(result.Warnings) > 0 {
+			return nil, fmt.Errorf("%w; %s", ErrNoCookies, strings.Join(result.Warnings, "; "))
+		}
 		return nil, ErrNoCookies
 	}
 

@@ -32,7 +32,7 @@ func (s CachedSource) Cookies(ctx context.Context) ([]*http.Cookie, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := writeFile(s.Path, cookies); err != nil {
+	if err := Write(s.Path, cookies); err != nil {
 		return nil, fmt.Errorf("write cookie cache: %w", err)
 	}
 	return cookies, nil
