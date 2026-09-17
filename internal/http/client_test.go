@@ -169,6 +169,54 @@ func TestMiddlewareNextCanOnlyBeCalledOnce(t *testing.T) {
 	}
 }
 
+func TestAddMiddlewarePanicsAfterRequest(t *testing.T) {
+	client := New(WithHTTPClient(&stdhttp.Client{Transport: roundTripFunc(func(request *stdhttp.Request) (*stdhttp.Response, error) {
+		return &stdhttp.Response{Header: make(stdhttp.Header), Request: request}, nil
+	})}))
+	request, err := stdhttp.NewRequest(stdhttp.MethodGet, "https://example.com", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.Do(request); err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() {
+		if recover() == nil {
+			t.Fatal("AddMiddleware() did not panic after a request")
+		}
+	}()
+	client.AddMiddleware(func(*Context, Next) error { return nil })
+}
+
+func TestConcurrentFirstRequests(t *testing.T) {
+	client := New(WithHTTPClient(&stdhttp.Client{Transport: roundTripFunc(func(request *stdhttp.Request) (*stdhttp.Response, error) {
+		return &stdhttp.Response{Header: make(stdhttp.Header), Request: request}, nil
+	})}))
+	client.AddMiddleware(func(_ *Context, next Next) error { return next() })
+
+	const requestCount = 32
+	start := make(chan struct{})
+	results := make(chan error, requestCount)
+	for range requestCount {
+		go func() {
+			<-start
+			response, err := client.Get(context.Background(), "https://example.com")
+			if response != nil {
+				response.Body.Close()
+			}
+			results <- err
+		}()
+	}
+	close(start)
+
+	for range requestCount {
+		if err := <-results; err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
 func TestAddMiddlewarePanicsForNil(t *testing.T) {
 	client := New()
 

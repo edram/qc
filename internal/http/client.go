@@ -3,14 +3,17 @@ package http
 
 import (
 	stdhttp "net/http"
+	"sync"
 )
 
 // Client sends HTTP requests through middleware.
 type Client struct {
-	baseURL     string
-	prefix      string
-	httpClient  *stdhttp.Client
-	middlewares []Middleware
+	baseURL      string
+	prefix       string
+	httpClient   *stdhttp.Client
+	middlewares  []Middleware
+	handler      handler
+	middlewareMu sync.Mutex
 }
 
 // New creates a Client from options.
@@ -52,13 +55,25 @@ func (c *Client) AddMiddleware(middleware Middleware) *Client {
 	if middleware == nil {
 		panic("http: middleware cannot be nil")
 	}
+	c.middlewareMu.Lock()
+	defer c.middlewareMu.Unlock()
+	if c.handler != nil {
+		panic("http: middleware cannot be added after a request")
+	}
 	c.middlewares = append(c.middlewares, middleware)
 	return c
 }
 
 // Do sends an existing request through the middleware chain.
 func (c *Client) Do(request *stdhttp.Request) (*stdhttp.Response, error) {
+	c.middlewareMu.Lock()
+	if c.handler == nil {
+		c.handler = c.middlewareChain()
+	}
+	handler := c.handler
+	c.middlewareMu.Unlock()
+
 	ctx := &Context{Client: c, Request: request}
-	err := c.middlewareChain()(ctx)
+	err := handler(ctx)
 	return ctx.Response, err
 }
