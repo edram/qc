@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestFetchPIDAndTID(t *testing.T) {
@@ -87,6 +88,48 @@ window.tid = '60b78b88dde384dbb6a24cb6c09c4656';
 	}
 	if baseRequests != 1 {
 		t.Fatalf("base requests = %d, want 1", baseRequests)
+	}
+}
+
+func TestClientFetchesPIDAndTIDFromBaseURLPath(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/base":
+			_, _ = w.Write([]byte(`<script>
+window.pid = 'pid-from-base-url';
+window.tid = 'tid-from-base-url';
+</script>`))
+		case "/api/search":
+			w.WriteHeader(http.StatusOK)
+		default:
+			t.Errorf("unexpected request to %s", r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	client := New(Options{
+		BaseURL:   server.URL + "/base",
+		UserAgent: testUserAgent,
+		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) {
+			return nil, nil
+		}),
+	})
+	result := make(chan error, 1)
+	go func() {
+		response, err := client.Post(context.Background(), "/api/search", strings.NewReader(`{}`))
+		if response != nil {
+			response.Body.Close()
+		}
+		result <- err
+	}()
+
+	select {
+	case err := <-result:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("request deadlocked while fetching identifiers")
 	}
 }
 

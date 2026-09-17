@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"net/http"
 	"regexp"
 )
 
@@ -34,21 +33,15 @@ func (c *Client) getPIDAndTID(ctx context.Context) (string, string, error) {
 	return c.pid, c.tid, nil
 }
 
+func (c *Client) identifiers() (string, string) {
+	c.identifierMu.Lock()
+	defer c.identifierMu.Unlock()
+	return c.pid, c.tid
+}
+
 // FetchPIDAndTID reads the request identifiers embedded in the configured base page.
 func (c *Client) FetchPIDAndTID(ctx context.Context) (string, string, error) {
-	if c.userAgent == "" {
-		return "", "", ErrUserAgentRequired
-	}
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL, nil)
-	if err != nil {
-		return "", "", err
-	}
-	request.Header.Set("User-Agent", c.userAgent)
-	if err := c.addCookies(ctx, request); err != nil {
-		return "", "", err
-	}
-
-	response, err := c.httpClient.Do(request)
+	response, err := c.httpClient.Get(ctx, "")
 	if err != nil {
 		return "", "", err
 	}

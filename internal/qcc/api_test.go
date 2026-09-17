@@ -162,9 +162,36 @@ func (f cookieSourceFunc) Cookies(ctx context.Context) ([]*http.Cookie, error) {
 }
 
 func TestNewUsesDefaultBaseURL(t *testing.T) {
-	if got := New(Options{}).baseURL; got != "https://www.qcc.com" {
-		t.Fatalf("baseURL = %q, want %q", got, "https://www.qcc.com")
+	client := New(Options{
+		HTTPClient: &http.Client{Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
+			if got := request.URL.String(); got != "https://www.qcc.com/companies" {
+				t.Fatalf("URL = %q, want %q", got, "https://www.qcc.com/companies")
+			}
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     make(http.Header),
+				Body:       io.NopCloser(strings.NewReader("ok")),
+				Request:    request,
+			}, nil
+		})},
+		PID:       "pid",
+		TID:       "tid",
+		UserAgent: testUserAgent,
+		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) {
+			return nil, nil
+		}),
+	})
+	response, err := client.Get(context.Background(), "/companies")
+	if err != nil {
+		t.Fatal(err)
 	}
+	response.Body.Close()
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(request *http.Request) (*http.Response, error) {
+	return f(request)
 }
 
 func TestClientCachesBrowserCookiesByDefault(t *testing.T) {
