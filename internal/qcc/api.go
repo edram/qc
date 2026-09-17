@@ -67,6 +67,12 @@ func New(options Options) *Client {
 		}
 		httpClient = &http.Client{Timeout: timeout}
 	}
+	// Keep redirect responses visible to callers instead of issuing another request.
+	httpClientCopy := *httpClient
+	httpClientCopy.CheckRedirect = func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+	httpClient = &httpClientCopy
 
 	return &Client{
 		baseURL:      strings.TrimRight(baseURL, "/"),

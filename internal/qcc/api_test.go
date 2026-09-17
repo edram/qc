@@ -90,6 +90,39 @@ func TestClientGetAndPost(t *testing.T) {
 	}
 }
 
+func TestClientDoesNotFollowRedirects(t *testing.T) {
+	redirectedRequests := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/redirected" {
+			redirectedRequests++
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		http.Redirect(w, r, "/redirected", http.StatusFound)
+	}))
+	defer server.Close()
+
+	client := New(Options{
+		BaseURL:      server.URL,
+		PID:          "pid",
+		TID:          "tid",
+		UserAgent:    testUserAgent,
+		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) { return nil, nil }),
+	})
+	response, err := client.Post(context.Background(), "/api/search/searchMulti", strings.NewReader(`{}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusFound {
+		t.Fatalf("status = %d, want %d", response.StatusCode, http.StatusFound)
+	}
+	if redirectedRequests != 0 {
+		t.Fatalf("redirected requests = %d, want 0", redirectedRequests)
+	}
+}
+
 func TestClientRequiresUserAgentBeforeRequest(t *testing.T) {
 	requested := false
 	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
