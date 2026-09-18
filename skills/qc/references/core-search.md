@@ -21,7 +21,6 @@ Apply QCC page filters:
 qc search ents "建筑" --source qcc \
   --match scope \
   --area 北京市 \
-  --industry 建筑业 \
   --status active
 ```
 
@@ -29,7 +28,6 @@ qc search ents "建筑" --source qcc \
 | --- | --- |
 | `--match` | `name`, `scope`, `introduction`, `address`, `brand`, `legal-representative`, `patent`, `trademark`, `shareholder`, `key-personnel` |
 | `--area` | QCC province label or code, such as `北京市` or `BJ` |
-| `--industry` | Top-level national-industry label or code, such as `建筑业` or `E` |
 | `--status` | `active`, `moved`, `establishing`, `cancelled`, `revoked` |
 
 Omitting `--match` searches enterprise names. The status values mean 存续/在业, 迁出, 设立, 注销, and 吊销 respectively. Enterprise filter flags accept repeated or comma-separated values:
@@ -48,12 +46,11 @@ Search by person name:
 qc search pers "李彦宏" --source qcc
 ```
 
-Person area and industry filters use the labels displayed by QCC. Join hierarchy levels with spaces and quote values containing spaces:
+Person area filters use the labels displayed by QCC. Join hierarchy levels with spaces and quote values containing spaces:
 
 ```console
 qc search pers "李彦宏" --source qcc \
-  --area "广东省 深圳市" \
-  --industry "信息传输、软件和信息技术服务业"
+  --area "广东省 深圳市"
 ```
 
 ### Consume the result
@@ -86,7 +83,6 @@ Source references:
 - https://raw.githubusercontent.com/edram/qc/main/README.md
 - https://raw.githubusercontent.com/edram/qc/main/internal/cli/search.go
 - https://raw.githubusercontent.com/edram/qc/main/internal/cli/search_qcc.go
-- https://raw.githubusercontent.com/edram/qc/main/internal/cli/search_qcc_filters.go
 - https://raw.githubusercontent.com/edram/qc/main/internal/models/enterprise.go
 - https://raw.githubusercontent.com/edram/qc/main/internal/models/person.go
 -->

@@ -41,7 +41,7 @@ func (c *Client) identifiers() (string, string) {
 
 // FetchPIDAndTID reads the request identifiers embedded in the configured base page.
 func (c *Client) FetchPIDAndTID(ctx context.Context) (string, string, error) {
-	response, err := c.httpClient.Get(ctx, "")
+	response, err := c.httpClient.WithContext(ctx).Get("")
 	if err != nil {
 		return "", "", err
 	}

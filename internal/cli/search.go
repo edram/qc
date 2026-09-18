@@ -43,15 +43,13 @@ const (
 )
 
 type enterpriseSearchFilter struct {
-	Fields     []enterpriseSearchField
-	Areas      []string
-	Industries []string
-	Statuses   []enterpriseSearchStatus
+	Fields   []enterpriseSearchField
+	Areas    []string
+	Statuses []enterpriseSearchStatus
 }
 
 type personSearchFilter struct {
-	Area     string
-	Industry string
+	Area string
 }
 
 type SearchCmd struct {
@@ -89,10 +87,9 @@ type SearchArgs struct {
 
 type SearchEntsCmd struct {
 	SearchArgs
-	Fields     []enterpriseSearchField  `name:"match" enum:"name,scope,introduction,address,brand,legal-representative,patent,trademark,shareholder,key-personnel" help:"Fields to match (${enum}); repeat to select multiple."`
-	Areas      []string                 `name:"area" help:"Area name, full path, or QCC code; repeat to select multiple."`
-	Industries []string                 `name:"industry" help:"Top-level national industry name or code; repeat to select multiple."`
-	Statuses   []enterpriseSearchStatus `name:"status" enum:"active,moved,establishing,cancelled,revoked" help:"Registration status (${enum}); repeat to select multiple."`
+	Fields   []enterpriseSearchField  `name:"match" enum:"name,scope,introduction,address,brand,legal-representative,patent,trademark,shareholder,key-personnel" help:"Fields to match (${enum}); repeat to select multiple."`
+	Areas    []string                 `name:"area" help:"Area name, full path, or QCC code; repeat to select multiple."`
+	Statuses []enterpriseSearchStatus `name:"status" enum:"active,moved,establishing,cancelled,revoked" help:"Registration status (${enum}); repeat to select multiple."`
 }
 
 func (cmd *SearchEntsCmd) Run(searchCmd *SearchCmd) error {
@@ -103,10 +100,9 @@ func (cmd *SearchEntsCmd) Run(searchCmd *SearchCmd) error {
 			return err
 		}
 		found, err := searcher.SearchEnterprises(context.Background(), cmd.Query, enterpriseSearchFilter{
-			Fields:     cmd.Fields,
-			Areas:      cmd.Areas,
-			Industries: cmd.Industries,
-			Statuses:   cmd.Statuses,
+			Fields:   cmd.Fields,
+			Areas:    cmd.Areas,
+			Statuses: cmd.Statuses,
 		})
 		if err != nil {
 			return err
@@ -118,8 +114,7 @@ func (cmd *SearchEntsCmd) Run(searchCmd *SearchCmd) error {
 
 type SearchPersCmd struct {
 	SearchArgs
-	Area     string `help:"Area path as displayed by QCC, for example '广东省 深圳市'."`
-	Industry string `help:"Industry path as displayed by QCC."`
+	Area string `help:"Area path as displayed by QCC, for example '广东省 深圳市'."`
 }
 
 func (cmd *SearchPersCmd) Run(searchCmd *SearchCmd) error {
@@ -130,8 +125,7 @@ func (cmd *SearchPersCmd) Run(searchCmd *SearchCmd) error {
 			return err
 		}
 		found, err := searcher.SearchPeople(context.Background(), cmd.Query, personSearchFilter{
-			Area:     cmd.Area,
-			Industry: cmd.Industry,
+			Area: cmd.Area,
 		})
 		if err != nil {
 			return err

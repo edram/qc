@@ -2,9 +2,11 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"html"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -49,13 +51,12 @@ type qccEnterpriseSearchResponse struct {
 }
 
 type qccPersonSearchRequest struct {
-	Key          string `json:"key"`
-	AreaInfo     string `json:"areaInfo"`
-	IndustryInfo string `json:"industryInfo"`
-	PageIndex    int    `json:"pageIndex"`
-	Status       []int  `json:"status"`
-	Name         string `json:"name"`
-	PageSize     int    `json:"pageSize"`
+	Key       string `json:"key"`
+	AreaInfo  string `json:"areaInfo"`
+	PageIndex int    `json:"pageIndex"`
+	Status    []int  `json:"status"`
+	Name      string `json:"name"`
+	PageSize  int    `json:"pageSize"`
 }
 
 type qccPersonSearchResponse struct {
@@ -142,13 +143,12 @@ func (s *searchQCC) SearchPeople(ctx context.Context, query string, filter perso
 		areaInfo = area.Code
 	}
 	request := qccPersonSearchRequest{
-		Key:          query,
-		AreaInfo:     areaInfo,
-		IndustryInfo: strings.TrimSpace(filter.Industry),
-		PageIndex:    1,
-		Status:       []int{0, 1},
-		Name:         query,
-		PageSize:     18,
+		Key:       query,
+		AreaInfo:  areaInfo,
+		PageIndex: 1,
+		Status:    []int{0, 1},
+		Name:      query,
+		PageSize:  18,
 	}
 
 	var result qccPersonSearchResponse
@@ -188,4 +188,84 @@ func qccText(value string) string {
 	value = strings.ReplaceAll(value, "<em>", "")
 	value = strings.ReplaceAll(value, "</em>", "")
 	return html.UnescapeString(value)
+}
+
+type qccAreaFilterCode string
+
+func (code qccAreaFilterCode) MarshalJSON() ([]byte, error) {
+	if _, err := strconv.ParseInt(string(code), 10, 64); err == nil {
+		return []byte(code), nil
+	}
+	return json.Marshal(string(code))
+}
+
+var qccEnterpriseFieldCodes = map[enterpriseSearchField]string{
+	enterpriseSearchFieldName:                "onlyname",
+	enterpriseSearchFieldScope:               "scope",
+	enterpriseSearchFieldIntroduction:        "introduction",
+	enterpriseSearchFieldAddress:             "address",
+	enterpriseSearchFieldBrand:               "product",
+	enterpriseSearchFieldLegalRepresentative: "opername",
+	enterpriseSearchFieldPatent:              "patent",
+	enterpriseSearchFieldTrademark:           "featurelist",
+	enterpriseSearchFieldShareholder:         "promoterlist",
+	enterpriseSearchFieldKeyPersonnel:        "employeelist",
+}
+
+var qccStatusCodes = map[enterpriseSearchStatus][]string{
+	enterpriseSearchStatusActive:       {"20", "10", "50"},
+	enterpriseSearchStatusMoved:        {"60"},
+	enterpriseSearchStatusEstablishing: {"117"},
+	enterpriseSearchStatusCancelled:    {"99", "91"},
+	enterpriseSearchStatusRevoked:      {"90"},
+}
+
+func qccEnterpriseSearchKey(query string, fields []enterpriseSearchField) (string, error) {
+	if len(fields) == 0 {
+		fields = []enterpriseSearchField{enterpriseSearchFieldName}
+	}
+	values := make(map[string]string, len(fields))
+	for _, field := range fields {
+		code, ok := qccEnterpriseFieldCodes[field]
+		if !ok {
+			return "", fmt.Errorf("unsupported enterprise match field %q", field)
+		}
+		values[code] = query
+	}
+	data, err := json.Marshal(values)
+	return string(data), err
+}
+
+func qccEnterpriseSearchFilter(filter enterpriseSearchFilter) (string, error) {
+	type areaFilter struct {
+		Province string              `json:"pr"`
+		Codes    []qccAreaFilterCode `json:"cc,omitempty"`
+	}
+	encoded := struct {
+		Areas    []areaFilter `json:"r,omitempty"`
+		Statuses []string     `json:"s,omitempty"`
+	}{}
+	for _, area := range filter.Areas {
+		selection, err := qcc.ResolveArea(area)
+		if err != nil {
+			return "", err
+		}
+		encodedArea := areaFilter{Province: selection.ProvinceCode}
+		if selection.Code != selection.ProvinceCode {
+			encodedArea.Codes = []qccAreaFilterCode{qccAreaFilterCode(selection.Code)}
+		}
+		encoded.Areas = append(encoded.Areas, encodedArea)
+	}
+	for _, status := range filter.Statuses {
+		codes, ok := qccStatusCodes[status]
+		if !ok {
+			return "", fmt.Errorf("unsupported enterprise status %q", status)
+		}
+		encoded.Statuses = append(encoded.Statuses, codes...)
+	}
+	if len(encoded.Areas) == 0 && len(encoded.Statuses) == 0 {
+		return "", nil
+	}
+	data, err := json.Marshal(encoded)
+	return string(data), err
 }

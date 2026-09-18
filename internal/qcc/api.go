@@ -91,7 +91,7 @@ func (c *Client) PostJSON(ctx context.Context, endpoint string, requestBody, res
 	if err != nil {
 		return fmt.Errorf("encode qcc JSON request: %w", err)
 	}
-	response, err := c.Post(ctx, endpoint, bytes.NewReader(body))
+	response, err := c.request(ctx, nethttp.MethodPost, endpoint, bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
@@ -106,5 +106,5 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body io.R
 	if _, _, err := c.getPIDAndTID(ctx); err != nil {
 		return nil, err
 	}
-	return c.httpClient.Request(ctx, method, endpoint, body)
+	return c.httpClient.WithContext(ctx).Request(method, endpoint, body)
 }

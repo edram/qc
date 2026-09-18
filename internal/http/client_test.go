@@ -44,7 +44,7 @@ func TestMiddlewareRunsBeforeAndAfterNext(t *testing.T) {
 		calls = append(calls, "second:after")
 		return nil
 	})
-	response, err := client.Get(context.Background(), "/resources")
+	response, err := client.Get("/resources")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,13 +79,38 @@ func TestBaseURLUsesStandardURLResolution(t *testing.T) {
 					return &stdhttp.Response{Header: make(stdhttp.Header), Request: request}, nil
 				})}),
 			)
-			response, err := client.Get(context.Background(), tt.endpoint)
+			response, err := client.Get(tt.endpoint)
 			if err != nil {
 				t.Fatal(err)
 			}
 			response.Body.Close()
 		})
 	}
+}
+
+func TestWithContextScopesCancellation(t *testing.T) {
+	client := New(WithHTTPClient(&stdhttp.Client{Transport: roundTripFunc(func(request *stdhttp.Request) (*stdhttp.Response, error) {
+		if err := request.Context().Err(); err != nil {
+			return nil, err
+		}
+		return &stdhttp.Response{Header: make(stdhttp.Header), Body: stdhttp.NoBody, Request: request}, nil
+	})}))
+	cancelled, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	response, err := client.WithContext(cancelled).Get("https://example.com")
+	if response != nil {
+		response.Body.Close()
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("WithContext().Get() error = %v, want %v", err, context.Canceled)
+	}
+
+	response, err = client.Get("https://example.com")
+	if err != nil {
+		t.Fatalf("Get() after scoped cancellation: %v", err)
+	}
+	response.Body.Close()
 }
 
 func TestPrefixAppliesBeforeBaseURL(t *testing.T) {
@@ -110,7 +135,7 @@ func TestPrefixAppliesBeforeBaseURL(t *testing.T) {
 					return &stdhttp.Response{Header: make(stdhttp.Header), Request: request}, nil
 				})}),
 			)
-			response, err := client.Get(context.Background(), "/users")
+			response, err := client.Get("/users")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -201,7 +226,7 @@ func TestConcurrentFirstRequests(t *testing.T) {
 	for range requestCount {
 		go func() {
 			<-start
-			response, err := client.Get(context.Background(), "https://example.com")
+			response, err := client.Get("https://example.com")
 			if response != nil {
 				response.Body.Close()
 			}
@@ -249,7 +274,7 @@ func TestWithoutRedirects(t *testing.T) {
 	defer server.Close()
 
 	client := New(WithoutRedirects())
-	response, err := client.Get(context.Background(), server.URL)
+	response, err := client.Get(server.URL)
 	if err != nil {
 		t.Fatal(err)
 	}

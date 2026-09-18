@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // Area identifies a QCC region and the province filter that contains it.
@@ -61,8 +62,18 @@ var regionCompatibilityCodes = map[string]string{
 //go:embed data/qcc_regions.json
 var regionData []byte
 
-// regionCatalog indexes the embedded snapshot by full path, unique name, and code.
-var regionCatalog = mustLoadRegions(regionData)
+var (
+	regionCatalogOnce sync.Once
+	regionCatalog     regionIndex
+)
+
+// loadedRegionCatalog parses the embedded snapshot only when area resolution is needed.
+func loadedRegionCatalog() *regionIndex {
+	regionCatalogOnce.Do(func() {
+		regionCatalog = mustLoadRegions(regionData)
+	})
+	return &regionCatalog
+}
 
 func mustLoadRegions(data []byte) regionIndex {
 	index, err := loadRegions(data)
@@ -132,21 +143,22 @@ func (index *regionIndex) addArea(path, name string, area Area) {
 
 // ResolveArea resolves a full path, unique name, or code from QCC's region catalog.
 func ResolveArea(value string) (Area, error) {
+	catalog := loadedRegionCatalog()
 	value = strings.Join(strings.Fields(value), " ")
-	if area, ok := regionCatalog.areasByPath[value]; ok {
+	if area, ok := catalog.areasByPath[value]; ok {
 		return area, nil
 	}
-	if area, ok := regionCatalog.areasByCode[strings.ToUpper(value)]; ok {
+	if area, ok := catalog.areasByCode[strings.ToUpper(value)]; ok {
 		return area, nil
 	}
-	candidates := regionCatalog.areasByName[value]
+	candidates := catalog.areasByName[value]
 	if len(candidates) == 1 {
 		return candidates[0], nil
 	}
 	if len(candidates) > 1 {
 		return Area{}, fmt.Errorf("ambiguous QCC area %q; use a full area path", value)
 	}
-	if suggestions := areaSuggestions(value, 3); len(suggestions) > 0 {
+	if suggestions := areaSuggestions(catalog, value, 3); len(suggestions) > 0 {
 		quoted := make([]string, len(suggestions))
 		for i, suggestion := range suggestions {
 			quoted[i] = strconv.Quote(suggestion)
@@ -156,7 +168,7 @@ func ResolveArea(value string) (Area, error) {
 	return Area{}, fmt.Errorf("unsupported QCC area %q; use an area name, full path, or code", value)
 }
 
-func areaSuggestions(value string, limit int) []string {
+func areaSuggestions(catalog *regionIndex, value string, limit int) []string {
 	if value == "" || limit <= 0 {
 		return nil
 	}
@@ -171,7 +183,7 @@ func areaSuggestions(value string, limit int) []string {
 	}
 
 	candidates := make([]candidate, 0)
-	for name, areas := range regionCatalog.areasByName {
+	for name, areas := range catalog.areasByName {
 		if len(areas) != 1 {
 			continue
 		}

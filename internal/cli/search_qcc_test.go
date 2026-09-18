@@ -144,7 +144,7 @@ func TestSearchQCCEnterpriseFilters(t *testing.T) {
 		if request.SearchKey != `{"scope":"建筑"}` {
 			t.Fatalf("searchKey = %q", request.SearchKey)
 		}
-		if request.Filter != `{"r":[{"pr":"ZJ","cc":[330782]}],"i":["E"],"s":["20","10","50"]}` {
+		if request.Filter != `{"r":[{"pr":"ZJ","cc":[330782]}],"s":["20","10","50"]}` {
 			t.Fatalf("filter = %q", request.Filter)
 		}
 		_, _ = w.Write([]byte(`{"Status":200,"Result":[]}`))
@@ -159,10 +159,9 @@ func TestSearchQCCEnterpriseFilters(t *testing.T) {
 		CookieSource: emptyCookieSource{},
 	})}
 	_, err := searcher.SearchEnterprises(context.Background(), "建筑", enterpriseSearchFilter{
-		Fields:     []enterpriseSearchField{enterpriseSearchFieldScope},
-		Areas:      []string{"义乌市"},
-		Industries: []string{"建筑业"},
-		Statuses:   []enterpriseSearchStatus{enterpriseSearchStatusActive},
+		Fields:   []enterpriseSearchField{enterpriseSearchFieldScope},
+		Areas:    []string{"义乌市"},
+		Statuses: []enterpriseSearchStatus{enterpriseSearchStatusActive},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -196,19 +195,18 @@ func TestSearchQCCPeople(t *testing.T) {
 		}
 
 		var request struct {
-			Key          string `json:"key"`
-			AreaInfo     string `json:"areaInfo"`
-			IndustryInfo string `json:"industryInfo"`
-			PageIndex    int    `json:"pageIndex"`
-			Status       []int  `json:"status"`
-			Name         string `json:"name"`
-			PageSize     int    `json:"pageSize"`
+			Key       string `json:"key"`
+			AreaInfo  string `json:"areaInfo"`
+			PageIndex int    `json:"pageIndex"`
+			Status    []int  `json:"status"`
+			Name      string `json:"name"`
+			PageSize  int    `json:"pageSize"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 			t.Fatal(err)
 		}
 		wantStatus := []int{0, 1}
-		if request.Key != "李彦宏" || request.AreaInfo != "" || request.IndustryInfo != "" || request.PageIndex != 1 || !reflect.DeepEqual(request.Status, wantStatus) || request.Name != "李彦宏" || request.PageSize != 18 {
+		if request.Key != "李彦宏" || request.AreaInfo != "" || request.PageIndex != 1 || !reflect.DeepEqual(request.Status, wantStatus) || request.Name != "李彦宏" || request.PageSize != 18 {
 			t.Fatalf("request = %#v", request)
 		}
 
@@ -267,7 +265,7 @@ func TestSearchQCCPeopleFilters(t *testing.T) {
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 			t.Fatal(err)
 		}
-		if request.AreaInfo != "440300" || request.IndustryInfo != "信息传输、软件和信息技术服务业" {
+		if request.AreaInfo != "440300" {
 			t.Fatalf("request = %#v", request)
 		}
 		_, _ = w.Write([]byte(`{"Status":200,"Result":[]}`))
@@ -282,8 +280,7 @@ func TestSearchQCCPeopleFilters(t *testing.T) {
 		CookieSource: emptyCookieSource{},
 	})}
 	_, err := searcher.SearchPeople(context.Background(), "李彦宏", personSearchFilter{
-		Area:     "广东省 深圳市",
-		Industry: "信息传输、软件和信息技术服务业",
+		Area: "广东省 深圳市",
 	})
 	if err != nil {
 		t.Fatal(err)
