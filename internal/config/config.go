@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/edram/qi/internal/app"
 )
 
 const defaultProfile = "default"
@@ -53,11 +55,7 @@ func defaultPath(profileName string) (string, error) {
 	if profileName == "." || profileName == ".." || strings.ContainsAny(profileName, `/\`) {
 		return "", fmt.Errorf("invalid config profile %q", profileName)
 	}
-	base, err := os.UserConfigDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(base, "qc", "config."+profileName+".json"), nil
+	return app.Path("config." + profileName + ".json")
 }
 
 func read(path string) (file, error) {

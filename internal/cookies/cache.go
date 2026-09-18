@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
+
+	"github.com/edram/qi/internal/app"
 )
 
 // CachedSource reads a JSON cache before falling back to Source and updating it.
@@ -38,17 +39,13 @@ func (s CachedSource) Cookies(ctx context.Context) ([]*http.Cookie, error) {
 	return cookies, nil
 }
 
-// DefaultPath returns a per-source, per-profile cookie cache under an application's config directory.
-func DefaultPath(application, source, profile string) (string, error) {
+// Path returns a per-source, per-profile cookie cache under the application directory.
+func Path(source, profile string) (string, error) {
 	if profile == "" {
 		profile = "default"
 	}
 	if profile == "." || profile == ".." || strings.ContainsAny(profile, `/\`) {
 		return "", fmt.Errorf("invalid cookie profile %q", profile)
 	}
-	base, err := os.UserConfigDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(base, application, "cookies", source+"."+profile+".json"), nil
+	return app.Path("cookies", source+"."+profile+".json")
 }

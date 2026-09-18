@@ -1,44 +1,45 @@
 package cookies
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
+
+	"github.com/edram/qi/internal/app"
 )
 
-func TestDefaultPathSeparatesProfiles(t *testing.T) {
+func TestPathSeparatesProfiles(t *testing.T) {
 	configDir := t.TempDir()
 	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
 	t.Setenv("XDG_CONFIG_HOME", configDir)
-	userConfigDir, err := os.UserConfigDir()
+	path, err := Path("qcc", "default")
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	path, err := DefaultPath("qc", "qcc", "default")
+	want, err := app.Path("cookies", "qcc.default.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := filepath.Join(userConfigDir, "qc", "cookies", "qcc.default.json")
 	if path != want {
 		t.Fatalf("path = %q, want %q", path, want)
 	}
 
-	path, err = DefaultPath("qc", "qcc", "work")
+	path, err = Path("qcc", "work")
 	if err != nil {
 		t.Fatal(err)
 	}
-	want = filepath.Join(userConfigDir, "qc", "cookies", "qcc.work.json")
+	want, err = app.Path("cookies", "qcc.work.json")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if path != want {
 		t.Fatalf("profile path = %q, want %q", path, want)
 	}
 }
 
-func TestDefaultPathRejectsUnsafeProfiles(t *testing.T) {
+func TestPathRejectsUnsafeProfiles(t *testing.T) {
 	for _, profile := range []string{".", "..", "../work", "work/personal", `work\personal`} {
-		if _, err := DefaultPath("qc", "qcc", profile); err == nil {
-			t.Errorf("DefaultPath() error = nil for profile %q", profile)
+		if _, err := Path("qcc", profile); err == nil {
+			t.Errorf("Path() error = nil for profile %q", profile)
 		}
 	}
 }

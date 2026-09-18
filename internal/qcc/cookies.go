@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	cookieApplicationName = "qc"
-	cookieSourceName      = "qcc"
+	cookieSourceName = "qcc"
 )
 
 // CookieSource supplies cookies for an outgoing QCC request.
@@ -74,5 +73,5 @@ func ImportBrowserCookies(ctx context.Context, profile string, browser sweetcook
 }
 
 func cookieCachePath(profile string) (string, error) {
-	return sharedcookies.DefaultPath(cookieApplicationName, cookieSourceName, profile)
+	return sharedcookies.Path(cookieSourceName, profile)
 }
