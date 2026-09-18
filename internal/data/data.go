@@ -6,3 +6,8 @@ import _ "embed"
 //
 //go:embed regions.json
 var Regions []byte
+
+// Industries contains the canonical industry tree and provider-specific codes.
+//
+//go:embed industries.json
+var Industries []byte
