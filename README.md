@@ -62,8 +62,8 @@ go install ./cmd/qc
 5. 搜索企业或人员：
 
    ```console
-   qc search ents "百度" --source qcc
-   qc search pers "李彦宏" --source qcc
+   qc search ents "百度" --provider qcc
+   qc search pers "李彦宏" --provider qcc
    ```
 
 企业搜索的 JSON 结构示例：
@@ -89,21 +89,21 @@ go install ./cmd/qc
 | `qc search pers <query>` | 搜索人员 |
 | `qc --help` | 查看完整命令帮助 |
 
-`--source` 可以重复使用，也接受逗号分隔的值：
+`--provider` 可以重复使用，也接受逗号分隔的值：
 
 ```console
-qc search ents "百度" --source qcc
-qc search ents "百度" --source qcc --source aiqicha
+qc search ents "百度" --provider qcc
+qc search ents "百度" --provider qcc --provider aiqicha
 ```
 
-爱企查尚未接入，因此当前应显式使用 `--source qcc`。
+爱企查搜索尚未接入，因此当前应显式使用 `--provider qcc`。
 
 ### 搜索筛选
 
 企业搜索支持按查找范围、省份和登记状态筛选。例如，查找北京经营范围包含“建筑”的存续企业：
 
 ```console
-qc search ents "建筑" --source qcc \
+qc search ents "建筑" --provider qcc \
   --match scope \
   --area 北京市 \
   --status active
@@ -122,7 +122,7 @@ qc search ents "建筑" --source qcc \
 人员搜索支持页面中的省份地区筛选。层级名称之间使用空格连接：
 
 ```console
-qc search pers "李彦宏" --source qcc \
+qc search pers "李彦宏" --provider qcc \
   --area "广东省 深圳市"
 ```
 
@@ -134,7 +134,7 @@ qc search pers "李彦宏" --source qcc \
 qc --profile work config set user-agent "Mozilla/5.0 ..."
 qc --profile work auth import --browser chrome --browser-profile "Profile 1"
 qc --profile work status
-qc --profile work search ents "百度" --source qcc
+qc --profile work search ents "百度" --provider qcc
 ```
 
 以下三个参数用途不同：

@@ -14,7 +14,7 @@ import (
 	"github.com/edram/qi/internal/qcc"
 )
 
-const searchSourceQCC searchSourceName = "qcc"
+const searchProviderQCC searchProviderName = "qcc"
 
 // QCC encodes calendar dates as Unix milliseconds at China-local midnight.
 var qccDateLocation = time.FixedZone("Asia/Shanghai", 8*60*60)

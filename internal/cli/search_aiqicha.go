@@ -7,7 +7,7 @@ import (
 	"github.com/edram/qi/internal/models"
 )
 
-const searchSourceAiqicha searchSourceName = "aiqicha"
+const searchProviderAiqicha searchProviderName = "aiqicha"
 
 type searchAiqicha struct {
 	api *aiqicha.Client

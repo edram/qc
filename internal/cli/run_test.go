@@ -229,31 +229,31 @@ func TestSearchCommandPaths(t *testing.T) {
 	}
 }
 
-func TestSearchSources(t *testing.T) {
+func TestSearchProviders(t *testing.T) {
 	tests := []struct {
 		name string
 		args []string
-		want []searchSourceName
+		want []searchProviderName
 	}{
 		{
 			name: "default",
 			args: []string{"search", "ents", "百度"},
-			want: []searchSourceName{searchSourceQCC, searchSourceAiqicha},
+			want: []searchProviderName{searchProviderQCC, searchProviderAiqicha},
 		},
 		{
-			name: "single source",
-			args: []string{"search", "ents", "百度", "--source", "qcc"},
-			want: []searchSourceName{searchSourceQCC},
+			name: "single provider",
+			args: []string{"search", "ents", "百度", "--provider", "qcc"},
+			want: []searchProviderName{searchProviderQCC},
 		},
 		{
 			name: "repeated flag",
-			args: []string{"search", "ents", "百度", "--source", "qcc", "--source", "aiqicha"},
-			want: []searchSourceName{searchSourceQCC, searchSourceAiqicha},
+			args: []string{"search", "ents", "百度", "--provider", "qcc", "--provider", "aiqicha"},
+			want: []searchProviderName{searchProviderQCC, searchProviderAiqicha},
 		},
 		{
 			name: "comma separated",
-			args: []string{"search", "pers", "李彦宏", "--source", "qcc,aiqicha"},
-			want: []searchSourceName{searchSourceQCC, searchSourceAiqicha},
+			args: []string{"search", "pers", "李彦宏", "--provider", "qcc,aiqicha"},
+			want: []searchProviderName{searchProviderQCC, searchProviderAiqicha},
 		},
 	}
 
@@ -267,22 +267,22 @@ func TestSearchSources(t *testing.T) {
 			if _, err := parser.Parse(tt.args); err != nil {
 				t.Fatal(err)
 			}
-			if got := command.Search.Sources; !reflect.DeepEqual(got, tt.want) {
-				t.Fatalf("Sources = %v, want %v", got, tt.want)
+			if got := command.Search.Providers; !reflect.DeepEqual(got, tt.want) {
+				t.Fatalf("Providers = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestSearchRejectsUnknownSource(t *testing.T) {
+func TestSearchRejectsUnknownProvider(t *testing.T) {
 	command := New()
 	parser, err := kong.New(command, kong.Name("qc"), kong.Exit(func(int) {}))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := parser.Parse([]string{"search", "ents", "百度", "--source", "unknown"}); err == nil {
-		t.Fatal("Parse() error = nil, want an invalid source error")
+	if _, err := parser.Parse([]string{"search", "ents", "百度", "--provider", "unknown"}); err == nil {
+		t.Fatal("Parse() error = nil, want an invalid provider error")
 	}
 }
 

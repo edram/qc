@@ -46,7 +46,7 @@ The global `--profile` flag selects both configuration and cached Cookies. Put i
 qc --profile work config set user-agent "Mozilla/5.0 ..."
 qc --profile work auth import --browser chrome --browser-profile "Profile 1"
 qc --profile work status
-qc --profile work search ents "百度" --source qcc
+qc --profile work search ents "百度" --provider qcc
 ```
 
 `--profile work` selects qc's namespace; `--browser-profile "Profile 1"` selects the browser's user directory. They are independent. `QC_PROFILE` can provide the default qc profile.

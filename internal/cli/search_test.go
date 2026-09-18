@@ -41,7 +41,7 @@ func (s searchStub) SearchPeople(context.Context, string, personSearchFilter) ([
 func TestSearchPeopleWritesModels(t *testing.T) {
 	var output bytes.Buffer
 	searchCmd := SearchCmd{
-		Sources: []searchSourceName{searchSourceQCC},
+		Providers: []searchProviderName{searchProviderQCC},
 		qcc: searchStub{people: []models.Person{{
 			ID:   "p089070bd9e914e774ef3e95d00ec5b0",
 			Name: "李彦宏",
@@ -62,7 +62,7 @@ func TestSearchPeopleWritesModels(t *testing.T) {
 func TestSearchEnterprisesWritesModels(t *testing.T) {
 	var output bytes.Buffer
 	searchCmd := SearchCmd{
-		Sources: []searchSourceName{searchSourceQCC},
+		Providers: []searchProviderName{searchProviderQCC},
 		qcc: searchStub{enterprises: []models.Enterprise{{
 			ID:   "3f603703d59a04cb",
 			Name: "百度在线网络技术（北京）有限公司",
@@ -87,7 +87,7 @@ func TestSearchEnterpriseFiltersReachProvider(t *testing.T) {
 		t.Fatal(err)
 	}
 	ctx, err := parser.Parse([]string{
-		"search", "ents", "建筑", "--source", "qcc",
+		"search", "ents", "建筑", "--provider", "qcc",
 		"--match", "scope", "--area", "北京市", "--status", "active",
 	})
 	if err != nil {
@@ -116,7 +116,7 @@ func TestSearchPeopleFiltersReachProvider(t *testing.T) {
 		t.Fatal(err)
 	}
 	ctx, err := parser.Parse([]string{
-		"search", "pers", "李彦宏", "--source", "qcc",
+		"search", "pers", "李彦宏", "--provider", "qcc",
 		"--area", "广东省 深圳市",
 	})
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 	"github.com/edram/qi/internal/models"
 )
 
-type searchSourceName string
+type searchProviderName string
 
 // search is the provider-independent behavior used by the search commands.
 type search interface {
@@ -53,7 +53,7 @@ type personSearchFilter struct {
 }
 
 type SearchCmd struct {
-	Sources []searchSourceName `name:"source" enum:"qcc,aiqicha" default:"qcc,aiqicha" help:"Search source (${enum}); repeat to select multiple."`
+	Providers []searchProviderName `name:"provider" enum:"qcc,aiqicha" default:"qcc,aiqicha" help:"Search provider (${enum}); repeat to select multiple."`
 	Ents    SearchEntsCmd      `kong:"cmd,help='Search enterprises.'"`
 	Pers    SearchPersCmd      `kong:"cmd,help='Search people.'"`
 
@@ -70,14 +70,14 @@ func newSearchCmd(profile, userAgent string) SearchCmd {
 	}
 }
 
-func (cmd *SearchCmd) resolveSource(name searchSourceName) (search, error) {
+func (cmd *SearchCmd) resolveProvider(name searchProviderName) (search, error) {
 	switch name {
-	case searchSourceQCC:
+	case searchProviderQCC:
 		return cmd.qcc, nil
-	case searchSourceAiqicha:
+	case searchProviderAiqicha:
 		return cmd.aiqicha, nil
 	default:
-		return nil, fmt.Errorf("unknown search source %q", name)
+		return nil, fmt.Errorf("unknown search provider %q", name)
 	}
 }
 
@@ -94,8 +94,8 @@ type SearchEntsCmd struct {
 
 func (cmd *SearchEntsCmd) Run(searchCmd *SearchCmd) error {
 	enterprises := make([]models.Enterprise, 0)
-	for _, name := range searchCmd.Sources {
-		searcher, err := searchCmd.resolveSource(name)
+	for _, name := range searchCmd.Providers {
+		searcher, err := searchCmd.resolveProvider(name)
 		if err != nil {
 			return err
 		}
@@ -119,8 +119,8 @@ type SearchPersCmd struct {
 
 func (cmd *SearchPersCmd) Run(searchCmd *SearchCmd) error {
 	people := make([]models.Person, 0)
-	for _, name := range searchCmd.Sources {
-		searcher, err := searchCmd.resolveSource(name)
+	for _, name := range searchCmd.Providers {
+		searcher, err := searchCmd.resolveProvider(name)
 		if err != nil {
 			return err
 		}
