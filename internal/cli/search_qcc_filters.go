@@ -3,8 +3,18 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 )
+
+type qccAreaFilterCode string
+
+func (code qccAreaFilterCode) MarshalJSON() ([]byte, error) {
+	if _, err := strconv.ParseInt(string(code), 10, 64); err == nil {
+		return []byte(code), nil
+	}
+	return json.Marshal(string(code))
+}
 
 // These values mirror the visible filters and payload codes used by QCC's search page.
 // See: https://www.qcc.com/web/search
@@ -19,43 +29,6 @@ var qccEnterpriseFieldCodes = map[enterpriseSearchField]string{
 	enterpriseSearchFieldTrademark:           "featurelist",
 	enterpriseSearchFieldShareholder:         "promoterlist",
 	enterpriseSearchFieldKeyPersonnel:        "employeelist",
-}
-
-var qccProvinceCodes = map[string]string{
-	"北京市":      "BJ",
-	"天津市":      "TJ",
-	"河北省":      "HB",
-	"山西省":      "SX",
-	"内蒙古自治区":   "NMG",
-	"辽宁省":      "LN",
-	"吉林省":      "JL",
-	"黑龙江省":     "HLJ",
-	"上海市":      "SH",
-	"江苏省":      "JS",
-	"浙江省":      "ZJ",
-	"安徽省":      "AH",
-	"福建省":      "FJ",
-	"江西省":      "JX",
-	"山东省":      "SD",
-	"河南省":      "HEN",
-	"湖北省":      "HUB",
-	"湖南省":      "HUN",
-	"广东省":      "GD",
-	"广西壮族自治区":  "GX",
-	"海南省":      "HAIN",
-	"重庆市":      "CQ",
-	"四川省":      "SC",
-	"贵州省":      "GZ",
-	"云南省":      "YN",
-	"西藏自治区":    "XZ",
-	"陕西省":      "SAX",
-	"甘肃省":      "GS",
-	"青海省":      "QH",
-	"宁夏回族自治区":  "NX",
-	"新疆维吾尔自治区": "XJ",
-	"香港特别行政区":  "HK",
-	"澳门特别行政区":  "MO",
-	"台湾省":      "TW",
 }
 
 var qccIndustryCodes = map[string]string{
@@ -107,7 +80,8 @@ func qccEnterpriseSearchKey(query string, fields []enterpriseSearchField) (strin
 
 func qccEnterpriseSearchFilter(filter enterpriseSearchFilter) (string, error) {
 	type areaFilter struct {
-		Province string `json:"pr"`
+		Province string              `json:"pr"`
+		Codes    []qccAreaFilterCode `json:"cc,omitempty"`
 	}
 	encoded := struct {
 		Areas      []areaFilter `json:"r,omitempty"`
@@ -115,11 +89,15 @@ func qccEnterpriseSearchFilter(filter enterpriseSearchFilter) (string, error) {
 		Statuses   []string     `json:"s,omitempty"`
 	}{}
 	for _, area := range filter.Areas {
-		code, err := qccFilterCode(area, qccProvinceCodes, "area")
+		selection, err := qccEnterpriseArea(area)
 		if err != nil {
 			return "", err
 		}
-		encoded.Areas = append(encoded.Areas, areaFilter{Province: code})
+		encodedArea := areaFilter{Province: selection.Province}
+		if code := selection.code(); code != selection.Province {
+			encodedArea.Codes = []qccAreaFilterCode{qccAreaFilterCode(code)}
+		}
+		encoded.Areas = append(encoded.Areas, encodedArea)
 	}
 	for _, industry := range filter.Industries {
 		code, err := qccFilterCode(industry, qccIndustryCodes, "industry")

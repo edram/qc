@@ -135,9 +135,17 @@ func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter 
 }
 
 func (s *searchQCC) SearchPeople(ctx context.Context, query string, filter personSearchFilter) ([]models.Person, error) {
+	areaInfo := ""
+	if strings.TrimSpace(filter.Area) != "" {
+		var err error
+		areaInfo, err = qccAreaCode(filter.Area)
+		if err != nil {
+			return nil, err
+		}
+	}
 	request := qccPersonSearchRequest{
 		Key:          query,
-		AreaInfo:     strings.TrimSpace(filter.Area),
+		AreaInfo:     areaInfo,
 		IndustryInfo: strings.TrimSpace(filter.Industry),
 		PageIndex:    1,
 		Status:       []int{0, 1},

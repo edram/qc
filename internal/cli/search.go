@@ -90,7 +90,7 @@ type SearchArgs struct {
 type SearchEntsCmd struct {
 	SearchArgs
 	Fields     []enterpriseSearchField  `name:"match" enum:"name,scope,introduction,address,brand,legal-representative,patent,trademark,shareholder,key-personnel" help:"Fields to match (${enum}); repeat to select multiple."`
-	Areas      []string                 `name:"area" help:"Province name or QCC province code; repeat to select multiple."`
+	Areas      []string                 `name:"area" help:"Area name, full path, or QCC code; repeat to select multiple."`
 	Industries []string                 `name:"industry" help:"Top-level national industry name or code; repeat to select multiple."`
 	Statuses   []enterpriseSearchStatus `name:"status" enum:"active,moved,establishing,cancelled,revoked" help:"Registration status (${enum}); repeat to select multiple."`
 }

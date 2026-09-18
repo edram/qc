@@ -144,7 +144,7 @@ func TestSearchQCCEnterpriseFilters(t *testing.T) {
 		if request.SearchKey != `{"scope":"建筑"}` {
 			t.Fatalf("searchKey = %q", request.SearchKey)
 		}
-		if request.Filter != `{"r":[{"pr":"BJ"}],"i":["E"],"s":["20","10","50"]}` {
+		if request.Filter != `{"r":[{"pr":"ZJ","cc":[330782]}],"i":["E"],"s":["20","10","50"]}` {
 			t.Fatalf("filter = %q", request.Filter)
 		}
 		_, _ = w.Write([]byte(`{"Status":200,"Result":[]}`))
@@ -160,12 +160,32 @@ func TestSearchQCCEnterpriseFilters(t *testing.T) {
 	})}
 	_, err := searcher.SearchEnterprises(context.Background(), "建筑", enterpriseSearchFilter{
 		Fields:     []enterpriseSearchField{enterpriseSearchFieldScope},
-		Areas:      []string{"北京市"},
+		Areas:      []string{"义乌市"},
 		Industries: []string{"建筑业"},
 		Statuses:   []enterpriseSearchStatus{enterpriseSearchStatusActive},
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestQCCEnterpriseSearchFilterSuggestsSimilarArea(t *testing.T) {
+	for _, tt := range []struct {
+		input string
+		exact string
+	}{
+		{input: "义乌", exact: `unsupported QCC area "义乌"; did you mean "义乌市"?`},
+		{input: "义务市"},
+	} {
+		t.Run(tt.input, func(t *testing.T) {
+			_, err := qccEnterpriseSearchFilter(enterpriseSearchFilter{Areas: []string{tt.input}})
+			if tt.exact != "" && (err == nil || err.Error() != tt.exact) {
+				t.Fatalf("qccEnterpriseSearchFilter() error = %v, want %q", err, tt.exact)
+			}
+			if tt.exact == "" && (err == nil || !strings.Contains(err.Error(), "did you mean") || !strings.Contains(err.Error(), `"义乌市"`)) {
+				t.Fatalf("qccEnterpriseSearchFilter() error = %v, want area suggestion", err)
+			}
+		})
 	}
 }
 
@@ -247,7 +267,7 @@ func TestSearchQCCPeopleFilters(t *testing.T) {
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 			t.Fatal(err)
 		}
-		if request.AreaInfo != "广东省 深圳市" || request.IndustryInfo != "信息传输、软件和信息技术服务业" {
+		if request.AreaInfo != "440300" || request.IndustryInfo != "信息传输、软件和信息技术服务业" {
 			t.Fatalf("request = %#v", request)
 		}
 		_, _ = w.Write([]byte(`{"Status":200,"Result":[]}`))
