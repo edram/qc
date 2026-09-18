@@ -1,8 +1,11 @@
 package qcc
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	nethttp "net/http"
 	"strings"
@@ -80,6 +83,23 @@ func (c *Client) Get(ctx context.Context, endpoint string) (*nethttp.Response, e
 // Post sends a POST request with body. The caller must close the response body.
 func (c *Client) Post(ctx context.Context, endpoint string, body io.Reader) (*nethttp.Response, error) {
 	return c.request(ctx, nethttp.MethodPost, endpoint, body)
+}
+
+// PostJSON sends a JSON request and decodes its JSON response.
+func (c *Client) PostJSON(ctx context.Context, endpoint string, requestBody, responseBody any) error {
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		return fmt.Errorf("encode qcc JSON request: %w", err)
+	}
+	response, err := c.Post(ctx, endpoint, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	if err := json.NewDecoder(response.Body).Decode(responseBody); err != nil {
+		return fmt.Errorf("decode qcc JSON response: %w", err)
+	}
+	return nil
 }
 
 func (c *Client) request(ctx context.Context, method, endpoint string, body io.Reader) (*nethttp.Response, error) {

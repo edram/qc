@@ -2,6 +2,7 @@ package qcc
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -87,6 +88,39 @@ func TestClientGetAndPost(t *testing.T) {
 				t.Fatalf("response body = %q, want %q", body, tt.want)
 			}
 		})
+	}
+}
+
+func TestClientPostJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request struct {
+			Name string `json:"name"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatal(err)
+		}
+		if request.Name != "企查查" {
+			t.Fatalf("request name = %q, want %q", request.Name, "企查查")
+		}
+		_ = json.NewEncoder(w).Encode(map[string]int{"status": http.StatusOK})
+	}))
+	defer server.Close()
+
+	client := New(Options{
+		BaseURL:      server.URL,
+		PID:          "pid",
+		TID:          "tid",
+		UserAgent:    testUserAgent,
+		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) { return nil, nil }),
+	})
+	var response struct {
+		Status int `json:"status"`
+	}
+	if err := client.PostJSON(context.Background(), "/search", map[string]string{"name": "企查查"}, &response); err != nil {
+		t.Fatal(err)
+	}
+	if response.Status != http.StatusOK {
+		t.Fatalf("response status = %d, want %d", response.Status, http.StatusOK)
 	}
 }
 

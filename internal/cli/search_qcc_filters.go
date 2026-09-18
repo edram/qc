@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/edram/qi/internal/qcc"
 )
 
 type qccAreaFilterCode string
@@ -89,13 +91,13 @@ func qccEnterpriseSearchFilter(filter enterpriseSearchFilter) (string, error) {
 		Statuses   []string     `json:"s,omitempty"`
 	}{}
 	for _, area := range filter.Areas {
-		selection, err := qccEnterpriseArea(area)
+		selection, err := qcc.ResolveArea(area)
 		if err != nil {
 			return "", err
 		}
-		encodedArea := areaFilter{Province: selection.Province}
-		if code := selection.code(); code != selection.Province {
-			encodedArea.Codes = []qccAreaFilterCode{qccAreaFilterCode(code)}
+		encodedArea := areaFilter{Province: selection.ProvinceCode}
+		if selection.Code != selection.ProvinceCode {
+			encodedArea.Codes = []qccAreaFilterCode{qccAreaFilterCode(selection.Code)}
 		}
 		encoded.Areas = append(encoded.Areas, encodedArea)
 	}

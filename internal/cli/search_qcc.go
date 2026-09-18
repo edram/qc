@@ -1,9 +1,7 @@
 package cli
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"html"
 	"net/http"
@@ -102,7 +100,7 @@ func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter 
 	}
 
 	var result qccEnterpriseSearchResponse
-	if err := s.postJSON(ctx, "/api/search/searchMulti", "enterprise search", request, &result); err != nil {
+	if err := s.api.PostJSON(ctx, "/api/search/searchMulti", request, &result); err != nil {
 		return nil, err
 	}
 	if err := qccStatusError("enterprise search", result.Status, result.Message); err != nil {
@@ -137,11 +135,11 @@ func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter 
 func (s *searchQCC) SearchPeople(ctx context.Context, query string, filter personSearchFilter) ([]models.Person, error) {
 	areaInfo := ""
 	if strings.TrimSpace(filter.Area) != "" {
-		var err error
-		areaInfo, err = qccAreaCode(filter.Area)
+		area, err := qcc.ResolveArea(filter.Area)
 		if err != nil {
 			return nil, err
 		}
+		areaInfo = area.Code
 	}
 	request := qccPersonSearchRequest{
 		Key:          query,
@@ -154,7 +152,7 @@ func (s *searchQCC) SearchPeople(ctx context.Context, query string, filter perso
 	}
 
 	var result qccPersonSearchResponse
-	if err := s.postJSON(ctx, "/api/bigsearch/searchPerson", "people search", request, &result); err != nil {
+	if err := s.api.PostJSON(ctx, "/api/bigsearch/searchPerson", request, &result); err != nil {
 		return nil, err
 	}
 	if err := qccStatusError("people search", result.Status, result.Message); err != nil {
@@ -177,22 +175,6 @@ func (s *searchQCC) SearchPeople(ctx context.Context, query string, filter perso
 		})
 	}
 	return people, nil
-}
-
-func (s *searchQCC) postJSON(ctx context.Context, endpoint, operation string, requestBody, responseBody any) error {
-	body, err := json.Marshal(requestBody)
-	if err != nil {
-		return err
-	}
-	response, err := s.api.Post(ctx, endpoint, bytes.NewReader(body))
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-	if err := json.NewDecoder(response.Body).Decode(responseBody); err != nil {
-		return fmt.Errorf("decode qcc %s response: %w", operation, err)
-	}
-	return nil
 }
 
 func qccStatusError(operation string, status int, message string) error {
