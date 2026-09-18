@@ -5,19 +5,19 @@
       "source": "edram/skills",
       "sourceType": "github",
       "skillPath": "skills/coding/SKILL.md",
-      "computedHash": "baaa9ffa52633f0d1240be8c180dfcd191b7157196d53152dc91d9bbf4c3f49d"
+      "computedHash": "43cff55589a0dc1644cd1781159011958f7a71e041990fcd2bf4f8a49fe233aa"
     },
     "doc-writer": {
       "source": "edram/skills",
       "sourceType": "github",
       "skillPath": "skills/doc-writer/SKILL.md",
-      "computedHash": "f4b8d14db3d3c8fa0826f077b9c8225b3cce6f9f919a147cc3c188d5cd90e4d9"
+      "computedHash": "86186785670ab5647a9c31158859ca0e141bc5bba3b500b78c00859b67195196"
     },
     "git-commit-convention": {
       "source": "edram/skills",
       "sourceType": "github",
       "skillPath": "skills/git-commit-convention/SKILL.md",
-      "computedHash": "8524a19e3006ac139ac316c57878c39a7d77e399bd045a71516c2b237ca47d2e"
+      "computedHash": "9c18c572ccc47dad954e4541c6683d857b761a4049df267bfc469d4aeffbb59b"
     },
     "skill-writer": {
       "source": "edram/skills",
@@ -29,7 +29,7 @@
       "source": "edram/skills",
       "sourceType": "github",
       "skillPath": "skills/tdd/SKILL.md",
-      "computedHash": "26064c0105217cd9bdc58a1f7f31b70a44a0e796c673981c1f33e6ea9e254736"
+      "computedHash": "a39e8199533d8807f445305754fa6d7b03b97e13db9ec3789cca8529dfd2f928"
     }
   }
 }

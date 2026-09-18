@@ -1,39 +1,28 @@
 ---
 name: core-scope
-description: Keep changes surgical — touch only what the task requires and preserve existing behavior
+description: Limit edits to the requested behavior and its necessary dependencies while preserving unaffected contracts
 ---
 
 ## Usage
 
-Touch only what the task requires. Every changed line should trace directly to the request.
+Every changed line should support the requested outcome or a necessary dependency of that outcome.
+
+Within the requested change, clear responsibilities take precedence over minimizing the diff. Choose the smallest complete change that satisfies both behavior and responsibility boundaries, not the fewest changed lines or files.
 
 When editing existing code:
 
-- Don't refactor, reformat, or "improve" code you weren't asked to change — even if it's adjacent.
-- Match the file's existing style and conventions (naming, error handling, structure); don't impose your own.
-- Preserve behavior: a refactor changes *how*, never *what*. Same inputs → same outputs.
+- Include affected callers, contracts, and tests when they must change for the implementation to remain correct. File boundaries alone do not determine scope.
+- Include focused extraction when needed to give the changed behavior a cohesive owner. Do not use that extraction as a reason to restructure unrelated legacy code.
+- Exclude unrelated refactoring, reformatting, and cleanup, even in adjacent code.
+- Match existing naming, error handling, and structure where they remain compatible with the requested change.
+- Preserve unaffected behavior. For a pure refactor, preserve observable outputs, side effects, error behavior, and relevant ordering guarantees.
 
-Clean up only your own mess:
-
-- Remove imports, variables, and helpers that *your* edits made unused.
-- Leave pre-existing dead code alone — mention it, don't delete it unasked.
-
-```diff
-  function priceWithTax(amount, rate) {
--   const t = amount * rate
--   return amount + t
-+   return amount + amount * rate
-  }
-
-# Bad:  also reformatting the untouched function below "while I'm here"
-# Good: stop at the function you were asked to change
-```
+Remove imports, variables, and helpers made unused by the change. Leave pre-existing dead code and unrelated defects outside the patch unless their removal or correction is required by the task.
 
 ## Key Points
 
-- Adjacent is not in scope. A messy neighbor is not your task.
-- Surface unrelated problems (dead code, a bug, a smell) as a note and let the user decide — don't fix them silently.
-- If a change seems to *require* touching unrelated code, treat that as a signal to ask first.
+- When a patch expands, trace each additional edit to a concrete dependency, correctness requirement, or responsibility boundary needed by the changed behavior.
+- Review the diff for unrelated changes before verification.
 
 <!--
 Source references:

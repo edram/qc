@@ -1,59 +1,20 @@
 ---
 name: core-simplicity
-description: Write the minimum code that solves the stated problem, without over-simplifying into cleverness
+description: Avoid speculative complexity while preserving useful abstractions and readability
 ---
 
 ## Usage
 
-Write the minimum code that solves the *stated* problem — nothing speculative.
+Choose the simplest implementation that satisfies the stated behavior without sacrificing clear responsibilities.
 
-Cut before you add:
-
-- No features beyond what was asked.
-- No abstraction for a single caller — inline it until a second caller exists.
-- No "flexibility", config, or options nobody requested.
-- No handling for states or errors that cannot occur.
-
-```js
-// Asked: "return the user's full name"
-
-// Over-engineered — speculative options + abstraction for one caller
-function formatName(user, opts = { order: "first-last", uppercase: false }) {
-  const parts = opts.order === "last-first" ? [user.last, user.first] : [user.first, user.last];
-  const joined = parts.filter(Boolean).join(" ");
-  return opts.uppercase ? joined.toUpperCase() : joined;
-}
-
-// Minimal — solves exactly what was asked
-function fullName(user) {
-  return `${user.first} ${user.last}`;
-}
-```
-
-The senior-engineer check: before finishing, ask *"would a senior engineer call this overcomplicated?"* If yes, simplify.
-
-**Balance — don't over-correct.** Simpler is not shorter or cleverer. Avoid:
-
-- Code-golfed one-liners that hide intent.
-- Nested ternaries — use `if`/`else` or `switch`.
-- Deleting a genuinely helpful abstraction just to cut lines.
-
-```js
-// Too clever — optimized for line count, hurts reading
-const label = s ? (s === "x" ? a : s === "y" ? b : c) : d;
-
-// Clearer — explicit beats compact
-let label = d;
-if (s === "x") label = a;
-else if (s === "y") label = b;
-else if (s) label = c;
-```
+- Do not add speculative features, configuration, or flexibility.
+- Introduce abstractions for concrete responsibility boundaries or meaningful shared behavior, not hypothetical reuse. Caller count alone is not a deciding factor.
+- Do not add handling for states or errors that cannot occur.
 
 ## Key Points
 
-- "Minimum" is measured against the *stated* problem, not an imagined future one — YAGNI.
-- Two callers justify an abstraction; one does not.
-- Clarity wins over brevity. Line count is not the goal; the goal is the simplest code a reader can follow.
+- Prefer readable control flow over code-golfed one-liners and nested ternaries.
+- Preserve useful abstractions; fewer lines or files are not a reason to collapse responsibility boundaries.
 
 <!--
 Source references:
