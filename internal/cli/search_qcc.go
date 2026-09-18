@@ -181,9 +181,6 @@ func (s *searchQCC) postJSON(ctx context.Context, endpoint, operation string, re
 		return err
 	}
 	defer response.Body.Close()
-	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		return fmt.Errorf("qcc %s: HTTP %s", operation, response.Status)
-	}
 	if err := json.NewDecoder(response.Body).Decode(responseBody); err != nil {
 		return fmt.Errorf("decode qcc %s response: %w", operation, err)
 	}

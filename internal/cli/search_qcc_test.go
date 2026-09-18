@@ -56,7 +56,7 @@ func TestSearchQCCEnterprisesRejectsHTTPError(t *testing.T) {
 	})}
 
 	_, err := searcher.SearchEnterprises(context.Background(), "百度", enterpriseSearchFilter{})
-	if err == nil || !strings.Contains(err.Error(), "502 Bad Gateway") {
+	if err == nil || !strings.Contains(err.Error(), "HTTP 502") {
 		t.Fatalf("error = %v, want HTTP status", err)
 	}
 }

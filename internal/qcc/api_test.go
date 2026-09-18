@@ -110,16 +110,112 @@ func TestClientDoesNotFollowRedirects(t *testing.T) {
 		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) { return nil, nil }),
 	})
 	response, err := client.Post(context.Background(), "/api/search/searchMulti", strings.NewReader(`{}`))
-	if err != nil {
-		t.Fatal(err)
+	if response != nil {
+		response.Body.Close()
+		t.Fatal("Post() response is non-nil for redirect error")
 	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusFound {
-		t.Fatalf("status = %d, want %d", response.StatusCode, http.StatusFound)
+	if err == nil || err.Error() != "qcc: redirect to /redirected" {
+		t.Fatalf("Post() error = %v, want redirect location", err)
 	}
 	if redirectedRequests != 0 {
 		t.Fatalf("redirected requests = %d, want 0", redirectedRequests)
+	}
+}
+
+func TestClientReportsLoginRedirect(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/weblogin?back=%2Fcompanies", http.StatusFound)
+	}))
+	defer server.Close()
+
+	client := New(Options{
+		BaseURL:      server.URL,
+		PID:          "pid",
+		TID:          "tid",
+		UserAgent:    testUserAgent,
+		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) { return nil, nil }),
+	})
+	response, err := client.Get(context.Background(), "/companies")
+	if response != nil {
+		response.Body.Close()
+		t.Fatal("Get() response is non-nil for login redirect")
+	}
+	if err == nil || err.Error() != "qcc: login required; log in to QCC again" {
+		t.Fatalf("Get() error = %v, want login guidance", err)
+	}
+}
+
+func TestClientClearsCookieCacheForUserAgentMismatchRedirect(t *testing.T) {
+	configDir := t.TempDir()
+	t.Setenv("APPDATA", configDir)
+	t.Setenv("HOME", configDir)
+	t.Setenv("XDG_CONFIG_HOME", configDir)
+	userConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cachePath := filepath.Join(userConfigDir, "qc", "cookies", "qcc.work.json")
+	if err := sharedcookies.Write(cachePath, []*http.Cookie{{Name: "QCCSESSID", Value: "stale"}}); err != nil {
+		t.Fatal(err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "https://www.qcc.com/405.html", http.StatusFound)
+	}))
+	defer server.Close()
+
+	client := New(Options{
+		BaseURL:   server.URL,
+		PID:       "pid",
+		TID:       "tid",
+		Profile:   "work",
+		UserAgent: testUserAgent,
+	})
+	response, err := client.Get(context.Background(), "/companies")
+	if response != nil {
+		response.Body.Close()
+		t.Fatal("Get() response is non-nil for User-Agent mismatch redirect")
+	}
+	if err == nil {
+		t.Fatal("Get() error = nil, want User-Agent mismatch guidance")
+	}
+	for _, want := range []string{"User-Agent may not match", "auth import", "cached cookies were deleted"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("Get() error = %q, want %q", err, want)
+		}
+	}
+	if _, err := os.Stat(cachePath); !os.IsNotExist(err) {
+		t.Fatalf("cookie cache still exists at %q: %v", cachePath, err)
+	}
+}
+
+func TestClientRejectsNonOKResponseWithHTMLTitle(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+		_, _ = w.Write([]byte(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>访问超频 - 企查查</title>
+</head>
+</html>`))
+	}))
+	defer server.Close()
+
+	client := New(Options{
+		BaseURL:      server.URL,
+		PID:          "pid",
+		TID:          "tid",
+		UserAgent:    testUserAgent,
+		CookieSource: cookieSourceFunc(func(context.Context) ([]*http.Cookie, error) { return nil, nil }),
+	})
+	response, err := client.Get(context.Background(), "/companies")
+	if response != nil {
+		response.Body.Close()
+		t.Fatal("Get() response is non-nil for HTTP error")
+	}
+	if err == nil || err.Error() != "qcc: HTTP 429: 访问超频 - 企查查" {
+		t.Fatalf("Get() error = %v, want status and HTML title", err)
 	}
 }
 

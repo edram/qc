@@ -80,7 +80,7 @@ func TestClientAuthInfoRejectsHTTPError(t *testing.T) {
 		}),
 	})
 	_, err := client.AuthInfo(context.Background())
-	if err == nil || !strings.Contains(err.Error(), "401 Unauthorized") {
+	if err == nil || !strings.Contains(err.Error(), "HTTP 401") {
 		t.Fatalf("AuthInfo() error = %v, want HTTP status", err)
 	}
 }

@@ -68,6 +68,7 @@ func New(options Options) *Client {
 	}
 	client.httpClient.AddMiddleware(client.sessionMiddleware)
 	client.httpClient.AddMiddleware(client.signMiddleware)
+	client.httpClient.AddMiddleware(client.responseMiddleware)
 	return client
 }
 

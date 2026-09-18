@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 )
 
@@ -57,9 +56,6 @@ func (c *Client) AuthInfo(ctx context.Context) (AuthInfo, error) {
 		return AuthInfo{}, err
 	}
 	defer response.Body.Close()
-	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		return AuthInfo{}, fmt.Errorf("qcc auth info: HTTP %s", response.Status)
-	}
 
 	var payload struct {
 		Data struct {

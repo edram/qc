@@ -2,7 +2,9 @@ package qcc
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"os"
 
 	sharedcookies "github.com/edram/qi/internal/cookies"
 	"github.com/steipete/sweetcookie"
@@ -38,6 +40,11 @@ type defaultCookieSource struct {
 	profile string
 }
 
+// cookieCacheClearer is implemented only by sources that own a removable local cache.
+type cookieCacheClearer interface {
+	clearCache() error
+}
+
 func newCookieSource(profile string) CookieSource {
 	return defaultCookieSource{profile: profile}
 }
@@ -51,6 +58,18 @@ func (s defaultCookieSource) Cookies(ctx context.Context) ([]*http.Cookie, error
 		Path:   path,
 		Source: BrowserCookieSource{},
 	}).Cookies(ctx)
+}
+
+func (s defaultCookieSource) clearCache() error {
+	path, err := cookieCachePath(s.profile)
+	if err != nil {
+		return err
+	}
+	err = os.Remove(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	return err
 }
 
 // ImportBrowserCookies replaces the selected profile's cache with cookies from a browser profile.
