@@ -6,6 +6,8 @@ import (
 	"io"
 	"strings"
 	"time"
+
+	"github.com/edram/qi/internal/app"
 )
 
 type statusCookiesProvider interface {
@@ -75,8 +77,13 @@ func (cmd *StatusCmd) configureProfile(profile, userAgent string) {
 
 func (cmd *StatusCmd) Run() error {
 	ctx := context.Background()
+	appPath, err := app.Dir()
+	if err != nil {
+		return fmt.Errorf("resolve app path: %w", err)
+	}
 	_, _ = fmt.Fprintln(cmd.output, "Overview")
-	_, _ = fmt.Fprintf(cmd.output, "  Profile: %s\n\n", cmd.profile)
+	_, _ = fmt.Fprintf(cmd.output, "  Profile: %s\n", cmd.profile)
+	_, _ = fmt.Fprintf(cmd.output, "  App Path: %s\n\n", appPath)
 	cookies, err := cmd.cookies.Cookies(ctx)
 	if err != nil {
 		return err
