@@ -12,6 +12,7 @@ func Execute(args []string, stdout, stderr io.Writer) int {
 	command.Auth.Import.output = stdout
 	command.Config.Set.UserAgent.output = stdout
 	command.Search.output = stdout
+	command.Industry.List.output = stdout
 	command.Status.output = stdout
 	exitCode := -1
 	parser, err := kong.New(
@@ -38,7 +39,7 @@ func Execute(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintln(stderr, err)
 		return 2
 	}
-	if err := command.loadProfileConfig(); err != nil {
+	if err := command.loadProfileConfigFor(ctx); err != nil {
 		_, _ = fmt.Fprintln(stderr, err)
 		return 1
 	}

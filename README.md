@@ -87,6 +87,7 @@ go install ./cmd/qc
 | `qc status` | 显示当前 profile、Cookie 元数据和账号状态 |
 | `qc search ents <query>` | 搜索企业 |
 | `qc search pers <query>` | 搜索人员 |
+| `qc industry list` | 搜索本地行业目录 |
 | `qc --help` | 查看完整命令帮助 |
 
 `--provider` 可以重复使用，也接受逗号分隔的值：
@@ -97,6 +98,12 @@ qc search ents "百度" --provider qcc --provider aiqicha
 ```
 
 爱企查搜索尚未接入，因此当前应显式使用 `--provider qcc`。
+
+行业目录按名称搜索，并返回名称和对应 provider 编码：
+
+```console
+qc industry list --search "软件" --provider qcc
+```
 
 ### 搜索筛选
 

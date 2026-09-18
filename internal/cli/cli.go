@@ -16,16 +16,18 @@ type CLI struct {
 	Auth      AuthCmd          `kong:"cmd,help='Authentication and cookies.'"`
 	Config    ConfigCmd        `kong:"cmd,help='Profile configuration.'"`
 	Search    SearchCmd        `kong:"cmd,help='Search enterprise and person records.'"`
+	Industry  IndustryCmd      `kong:"cmd,help='Search the local industry catalog.'"`
 	Status    StatusCmd        `kong:"cmd,help='Show cookie and account status.'"`
 }
 
 func New() *CLI {
 	return &CLI{
-		Profile: defaultProfileName,
-		Auth:    newAuthCmd(defaultProfileName),
-		Config:  newConfigCmd(defaultProfileName),
-		Search:  newSearchCmd(defaultProfileName, ""),
-		Status:  newStatusCmd(defaultProfileName, ""),
+		Profile:  defaultProfileName,
+		Auth:     newAuthCmd(defaultProfileName),
+		Config:   newConfigCmd(defaultProfileName),
+		Search:   newSearchCmd(defaultProfileName, ""),
+		Industry: newIndustryCmd(),
+		Status:   newStatusCmd(defaultProfileName, ""),
 	}
 }
 
@@ -39,6 +41,13 @@ func (c *CLI) loadProfileConfig() error {
 	}
 	c.UserAgent = userAgent
 	return nil
+}
+
+func (c *CLI) loadProfileConfigFor(ctx *kong.Context) error {
+	if selected := ctx.Selected(); selected != nil && strings.HasSuffix(selected.FullPath(), " industry list") {
+		return nil
+	}
+	return c.loadProfileConfig()
 }
 
 func (c *CLI) configureProfile() {

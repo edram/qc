@@ -105,7 +105,7 @@ func (catalog *Catalog) Resolve(value string) (Industry, error) {
 	return Industry{}, fmt.Errorf("unsupported %s industry %q", catalog.provider, value)
 }
 
-// Search returns industries whose name, path, or provider code contains query.
+// Search returns industries whose name contains query.
 func (catalog *Catalog) Search(query string, limit int) []Industry {
 	query = strings.ToLower(normalize(query))
 	if query == "" || limit == 0 {
@@ -113,9 +113,7 @@ func (catalog *Catalog) Search(query string, limit int) []Industry {
 	}
 	result := make([]Industry, 0)
 	for _, industry := range catalog.all {
-		if strings.Contains(strings.ToLower(industry.Name), query) ||
-			strings.Contains(strings.ToLower(industry.Path), query) ||
-			strings.Contains(strings.ToLower(industry.ProviderCode), query) {
+		if strings.Contains(strings.ToLower(industry.Name), query) {
 			result = append(result, industry)
 		}
 	}
@@ -125,6 +123,20 @@ func (catalog *Catalog) Search(query string, limit int) []Industry {
 		}
 		return result[i].Path < result[j].Path
 	})
+	if limit > 0 && len(result) > limit {
+		result = result[:limit]
+	}
+	return result
+}
+
+// TopLevel returns the provider-supported first-level industries.
+func (catalog *Catalog) TopLevel(limit int) []Industry {
+	result := make([]Industry, 0)
+	for _, industry := range catalog.all {
+		if industry.Depth == 1 {
+			result = append(result, industry)
+		}
+	}
 	if limit > 0 && len(result) > limit {
 		result = result[:limit]
 	}
