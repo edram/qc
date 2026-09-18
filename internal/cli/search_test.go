@@ -88,7 +88,7 @@ func TestSearchEnterpriseFiltersReachProvider(t *testing.T) {
 	}
 	ctx, err := parser.Parse([]string{
 		"search", "ents", "建筑", "--provider", "qcc",
-		"--match", "scope", "--area", "北京市", "--status", "active",
+		"--match", "scope", "--area", "北京市", "--industry", "建筑业", "--status", "active",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -100,9 +100,10 @@ func TestSearchEnterpriseFiltersReachProvider(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := enterpriseSearchFilter{
-		Fields:   []enterpriseSearchField{enterpriseSearchFieldScope},
-		Areas:    []string{"北京市"},
-		Statuses: []enterpriseSearchStatus{enterpriseSearchStatusActive},
+		Fields:     []enterpriseSearchField{enterpriseSearchFieldScope},
+		Areas:      []string{"北京市"},
+		Industries: []string{"建筑业"},
+		Statuses:   []enterpriseSearchStatus{enterpriseSearchStatusActive},
 	}
 	if !reflect.DeepEqual(searcher.enterprise, want) {
 		t.Fatalf("enterprise filter = %#v, want %#v", searcher.enterprise, want)
@@ -117,7 +118,7 @@ func TestSearchPeopleFiltersReachProvider(t *testing.T) {
 	}
 	ctx, err := parser.Parse([]string{
 		"search", "pers", "李彦宏", "--provider", "qcc",
-		"--area", "广东省 深圳市",
+		"--area", "广东省 深圳市", "--industry", "软件和信息技术服务业",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -129,7 +130,8 @@ func TestSearchPeopleFiltersReachProvider(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := personSearchFilter{
-		Area: "广东省 深圳市",
+		Area:     "广东省 深圳市",
+		Industry: "软件和信息技术服务业",
 	}
 	if searcher.person != want {
 		t.Fatalf("person filter = %#v, want %#v", searcher.person, want)

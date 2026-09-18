@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/edram/qi/internal/industries"
 	"github.com/edram/qi/internal/models"
 	"github.com/edram/qi/internal/qcc"
 )
@@ -51,12 +52,13 @@ type qccEnterpriseSearchResponse struct {
 }
 
 type qccPersonSearchRequest struct {
-	Key       string `json:"key"`
-	AreaInfo  string `json:"areaInfo"`
-	PageIndex int    `json:"pageIndex"`
-	Status    []int  `json:"status"`
-	Name      string `json:"name"`
-	PageSize  int    `json:"pageSize"`
+	Key          string `json:"key"`
+	AreaInfo     string `json:"areaInfo"`
+	IndustryInfo string `json:"industryInfo"`
+	PageIndex    int    `json:"pageIndex"`
+	Status       []int  `json:"status"`
+	Name         string `json:"name"`
+	PageSize     int    `json:"pageSize"`
 }
 
 type qccPersonSearchResponse struct {
@@ -142,13 +144,26 @@ func (s *searchQCC) SearchPeople(ctx context.Context, query string, filter perso
 		}
 		areaInfo = area.Code
 	}
+	industryInfo := ""
+	if strings.TrimSpace(filter.Industry) != "" {
+		catalog, err := industries.Load(industries.ProviderQCC)
+		if err != nil {
+			return nil, err
+		}
+		industry, err := catalog.Resolve(filter.Industry)
+		if err != nil {
+			return nil, err
+		}
+		industryInfo = industry.Path
+	}
 	request := qccPersonSearchRequest{
-		Key:       query,
-		AreaInfo:  areaInfo,
-		PageIndex: 1,
-		Status:    []int{0, 1},
-		Name:      query,
-		PageSize:  18,
+		Key:          query,
+		AreaInfo:     areaInfo,
+		IndustryInfo: industryInfo,
+		PageIndex:    1,
+		Status:       []int{0, 1},
+		Name:         query,
+		PageSize:     18,
 	}
 
 	var result qccPersonSearchResponse
@@ -242,8 +257,9 @@ func qccEnterpriseSearchFilter(filter enterpriseSearchFilter) (string, error) {
 		Codes    []qccAreaFilterCode `json:"cc,omitempty"`
 	}
 	encoded := struct {
-		Areas    []areaFilter `json:"r,omitempty"`
-		Statuses []string     `json:"s,omitempty"`
+		Areas      []areaFilter `json:"r,omitempty"`
+		Industries []string     `json:"i,omitempty"`
+		Statuses   []string     `json:"s,omitempty"`
 	}{}
 	for _, area := range filter.Areas {
 		selection, err := qcc.ResolveArea(area)
@@ -256,6 +272,19 @@ func qccEnterpriseSearchFilter(filter enterpriseSearchFilter) (string, error) {
 		}
 		encoded.Areas = append(encoded.Areas, encodedArea)
 	}
+	if len(filter.Industries) > 0 {
+		catalog, err := industries.Load(industries.ProviderQCC)
+		if err != nil {
+			return "", err
+		}
+		for _, name := range filter.Industries {
+			industry, err := catalog.Resolve(name)
+			if err != nil {
+				return "", err
+			}
+			encoded.Industries = append(encoded.Industries, industry.ProviderCode)
+		}
+	}
 	for _, status := range filter.Statuses {
 		codes, ok := qccStatusCodes[status]
 		if !ok {
@@ -263,7 +292,7 @@ func qccEnterpriseSearchFilter(filter enterpriseSearchFilter) (string, error) {
 		}
 		encoded.Statuses = append(encoded.Statuses, codes...)
 	}
-	if len(encoded.Areas) == 0 && len(encoded.Statuses) == 0 {
+	if len(encoded.Areas) == 0 && len(encoded.Industries) == 0 && len(encoded.Statuses) == 0 {
 		return "", nil
 	}
 	data, err := json.Marshal(encoded)

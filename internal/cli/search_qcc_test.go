@@ -144,7 +144,7 @@ func TestSearchQCCEnterpriseFilters(t *testing.T) {
 		if request.SearchKey != `{"scope":"建筑"}` {
 			t.Fatalf("searchKey = %q", request.SearchKey)
 		}
-		if request.Filter != `{"r":[{"pr":"ZJ","cc":[330782]}],"s":["20","10","50"]}` {
+		if request.Filter != `{"r":[{"pr":"ZJ","cc":[330782]}],"i":["E"],"s":["20","10","50"]}` {
 			t.Fatalf("filter = %q", request.Filter)
 		}
 		_, _ = w.Write([]byte(`{"Status":200,"Result":[]}`))
@@ -159,9 +159,10 @@ func TestSearchQCCEnterpriseFilters(t *testing.T) {
 		CookieSource: emptyCookieSource{},
 	})}
 	_, err := searcher.SearchEnterprises(context.Background(), "建筑", enterpriseSearchFilter{
-		Fields:   []enterpriseSearchField{enterpriseSearchFieldScope},
-		Areas:    []string{"义乌市"},
-		Statuses: []enterpriseSearchStatus{enterpriseSearchStatusActive},
+		Fields:     []enterpriseSearchField{enterpriseSearchFieldScope},
+		Areas:      []string{"义乌市"},
+		Industries: []string{"建筑业"},
+		Statuses:   []enterpriseSearchStatus{enterpriseSearchStatusActive},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -265,7 +266,7 @@ func TestSearchQCCPeopleFilters(t *testing.T) {
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 			t.Fatal(err)
 		}
-		if request.AreaInfo != "440300" {
+		if request.AreaInfo != "440300" || request.IndustryInfo != "信息传输、软件和信息技术服务业 软件和信息技术服务业" {
 			t.Fatalf("request = %#v", request)
 		}
 		_, _ = w.Write([]byte(`{"Status":200,"Result":[]}`))
@@ -280,7 +281,8 @@ func TestSearchQCCPeopleFilters(t *testing.T) {
 		CookieSource: emptyCookieSource{},
 	})}
 	_, err := searcher.SearchPeople(context.Background(), "李彦宏", personSearchFilter{
-		Area: "广东省 深圳市",
+		Area:     "广东省 深圳市",
+		Industry: "软件和信息技术服务业",
 	})
 	if err != nil {
 		t.Fatal(err)

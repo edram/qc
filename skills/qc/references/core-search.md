@@ -21,6 +21,7 @@ Apply QCC page filters:
 qc search ents "建筑" --provider qcc \
   --match scope \
   --area 北京市 \
+  --industry 建筑业 \
   --status active
 ```
 
@@ -28,6 +29,7 @@ qc search ents "建筑" --provider qcc \
 | --- | --- |
 | `--match` | `name`, `scope`, `introduction`, `address`, `brand`, `legal-representative`, `patent`, `trademark`, `shareholder`, `key-personnel` |
 | `--area` | QCC province label or code, such as `北京市` or `BJ` |
+| `--industry` | Industry name, such as `建筑业`; use `qc industry list --search <query>` to find names |
 | `--status` | `active`, `moved`, `establishing`, `cancelled`, `revoked` |
 
 Omitting `--match` searches enterprise names. The status values mean 存续/在业, 迁出, 设立, 注销, and 吊销 respectively. Enterprise filter flags accept repeated or comma-separated values:
@@ -46,11 +48,12 @@ Search by person name:
 qc search pers "李彦宏" --provider qcc
 ```
 
-Person area filters use the labels displayed by QCC. Join hierarchy levels with spaces and quote values containing spaces:
+Person searches accept area and industry names:
 
 ```console
 qc search pers "李彦宏" --provider qcc \
-  --area "广东省 深圳市"
+  --area "广东省 深圳市" \
+  --industry "软件和信息技术服务业"
 ```
 
 ### Consume the result

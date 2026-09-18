@@ -107,12 +107,13 @@ qc industry list --search "软件" --provider qcc
 
 ### 搜索筛选
 
-企业搜索支持按查找范围、省份和登记状态筛选。例如，查找北京经营范围包含“建筑”的存续企业：
+企业搜索支持按查找范围、地区、行业和登记状态筛选。例如，查找北京建筑业中经营范围包含“建筑”的存续企业：
 
 ```console
 qc search ents "建筑" --provider qcc \
   --match scope \
   --area 北京市 \
+  --industry 建筑业 \
   --status active
 ```
 
@@ -122,15 +123,17 @@ qc search ents "建筑" --provider qcc \
 | --- | --- |
 | `--match` | `name`、`scope`、`introduction`、`address`、`brand`、`legal-representative`、`patent`、`trademark`、`shareholder`、`key-personnel` |
 | `--area` | 企查查页面显示的省份名称或省份代码，例如 `北京市`、`BJ` |
+| `--industry` | 行业名称，例如 `建筑业`；可以先用 `qc industry list --search <关键词>` 查找 |
 | `--status` | `active`、`moved`、`establishing`、`cancelled`、`revoked` |
 
 不传 `--match` 时默认只匹配企业名。状态值依次对应存续/在业、迁出、设立、注销和吊销。
 
-人员搜索支持页面中的省份地区筛选。层级名称之间使用空格连接：
+人员搜索支持地区和行业名称筛选：
 
 ```console
 qc search pers "李彦宏" --provider qcc \
-  --area "广东省 深圳市"
+  --area "广东省 深圳市" \
+  --industry "软件和信息技术服务业"
 ```
 
 ## Profile
