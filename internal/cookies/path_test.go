@@ -7,10 +7,6 @@ import (
 )
 
 func TestPathSeparatesProfiles(t *testing.T) {
-	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
-	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
 	path, err := Path("qcc", "default")
 	if err != nil {
 		t.Fatal(err)
