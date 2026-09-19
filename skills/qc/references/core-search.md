@@ -72,14 +72,33 @@ qc search pers "李彦宏" --provider qcc \
 
 ### Consume the result
 
-Both commands write a JSON array to standard output. Enterprise objects can include:
+Enterprise searches write an object containing the full match count, the current page, and supported aggregations:
+
+```json
+{
+  "total": 12451,
+  "enterprises": [
+    {
+      "id": "...",
+      "name": "百度在线网络技术（北京）有限公司",
+      "tags": ["被执行人", "港股VIE", "美股VIE", "高新技术企业", "企业技术中心"]
+    }
+  ],
+  "aggregations": {
+    "provinces": [{"code": "JS", "name": "江苏省", "count": 909}],
+    "industries": [{"code": "F", "name": "批发和零售业", "count": 4754}]
+  }
+}
+```
+
+Enterprise objects can include:
 
 ```text
 id, detailUrl, name, registrationNumber, creditCode, legalRepresentative, status,
-establishedDate, address, registeredCapital, phone, email, logoUrl
+establishedDate, address, registeredCapital, phone, email, logoUrl, tags
 ```
 
-Person objects can include:
+Person searches continue to write a JSON array. Person objects can include:
 
 ```text
 id, detailUrl, name, mainCompanyId, mainCompanyName, role, relatedCompanyCount,

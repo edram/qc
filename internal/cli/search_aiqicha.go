@@ -17,8 +17,8 @@ func newSearchAiqicha() search {
 	return &searchAiqicha{api: aiqicha.New(aiqicha.Options{})}
 }
 
-func (*searchAiqicha) SearchEnterprises(context.Context, string, enterpriseSearchFilter) ([]models.Enterprise, error) {
-	return nil, nil
+func (*searchAiqicha) SearchEnterprises(context.Context, string, enterpriseSearchFilter) (models.EnterpriseSearchResult, error) {
+	return models.EnterpriseSearchResult{}, nil
 }
 
 func (*searchAiqicha) SearchPeople(context.Context, string, personSearchFilter) ([]models.Person, error) {

@@ -13,7 +13,7 @@ type searchProviderName string
 
 // search is the provider-independent behavior used by the search commands.
 type search interface {
-	SearchEnterprises(context.Context, string, enterpriseSearchFilter) ([]models.Enterprise, error)
+	SearchEnterprises(context.Context, string, enterpriseSearchFilter) (models.EnterpriseSearchResult, error)
 	SearchPeople(context.Context, string, personSearchFilter) ([]models.Person, error)
 }
 
@@ -96,7 +96,7 @@ type SearchEntsCmd struct {
 }
 
 func (cmd *SearchEntsCmd) Run(searchCmd *SearchCmd) error {
-	enterprises := make([]models.Enterprise, 0)
+	result := models.EnterpriseSearchResult{Enterprises: make([]models.Enterprise, 0)}
 	for _, name := range searchCmd.Providers {
 		searcher, err := searchCmd.resolveProvider(name)
 		if err != nil {
@@ -111,9 +111,35 @@ func (cmd *SearchEntsCmd) Run(searchCmd *SearchCmd) error {
 		if err != nil {
 			return err
 		}
-		enterprises = append(enterprises, found...)
+		result.Total += found.Total
+		result.Enterprises = append(result.Enterprises, found.Enterprises...)
+		result.Aggregations.Provinces = mergeEnterpriseSearchAggregations(
+			result.Aggregations.Provinces,
+			found.Aggregations.Provinces,
+		)
+		result.Aggregations.Industries = mergeEnterpriseSearchAggregations(
+			result.Aggregations.Industries,
+			found.Aggregations.Industries,
+		)
 	}
-	return json.NewEncoder(searchCmd.output).Encode(enterprises)
+	return json.NewEncoder(searchCmd.output).Encode(result)
+}
+
+func mergeEnterpriseSearchAggregations(current, additional []models.EnterpriseSearchAggregation) []models.EnterpriseSearchAggregation {
+	indices := make(map[string]int, len(current)+len(additional))
+	for i, item := range current {
+		indices[item.Code+"\x00"+item.Name] = i
+	}
+	for _, item := range additional {
+		key := item.Code + "\x00" + item.Name
+		if i, ok := indices[key]; ok {
+			current[i].Count += item.Count
+			continue
+		}
+		indices[key] = len(current)
+		current = append(current, item)
+	}
+	return current
 }
 
 type SearchPersCmd struct {

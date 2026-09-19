@@ -85,6 +85,11 @@ func TestSearchQCCEnterprises(t *testing.T) {
 
 		_, _ = w.Write([]byte(`{
 			"Status": 200,
+			"Paging": {"TotalRecords": 64},
+			"GroupItems": [
+				{"key": "province", "items": [{"value": "GD", "count": 15, "desc": "广东"}]},
+				{"key": "industrycode", "items": [{"value": "M", "count": 23, "desc": "科研"}]}
+			],
 			"Result": [{
 				"KeyNo": "3f603703d59a04cb",
 				"Name": "<em>百度</em>在线网络技术（北京）有限公司",
@@ -97,7 +102,12 @@ func TestSearchQCCEnterprises(t *testing.T) {
 				"RegistCapi": "4520万元",
 				"ContactNumber": "010-59928888",
 				"Email": "jiangyao@baidu.com",
-				"ImageUrl": "https://image.qcc.com/logo/baidu.jpg"
+				"ImageUrl": "https://image.qcc.com/logo/baidu.jpg",
+				"TagsInfoV2": [
+					{"Type": 505, "Name": "小微企业"},
+					{"Type": 108, "Name": "高新技术企业"},
+					{"Type": 106, "Name": "专精特新中小企业"}
+				]
 			}]
 		}`))
 	}))
@@ -115,21 +125,29 @@ func TestSearchQCCEnterprises(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []models.Enterprise{{
-		ID:                  "3f603703d59a04cb",
-		DetailURL:           "https://www.qcc.com/firm/3f603703d59a04cb.html",
-		Name:                "百度在线网络技术（北京）有限公司",
-		RegistrationNumber:  "110000410144104",
-		CreditCode:          "91110108717743469K",
-		LegalRepresentative: "何俊杰",
-		Status:              "存续",
-		EstablishedDate:     "2000-01-18",
-		Address:             "北京市海淀区上地十街10号百度大厦三层",
-		RegisteredCapital:   "4520万元",
-		Phone:               "010-59928888",
-		Email:               "jiangyao@baidu.com",
-		LogoURL:             "https://image.qcc.com/logo/baidu.jpg",
-	}}
+	want := models.EnterpriseSearchResult{
+		Total: 64,
+		Enterprises: []models.Enterprise{{
+			ID:                  "3f603703d59a04cb",
+			DetailURL:           "https://www.qcc.com/firm/3f603703d59a04cb.html",
+			Name:                "百度在线网络技术（北京）有限公司",
+			RegistrationNumber:  "110000410144104",
+			CreditCode:          "91110108717743469K",
+			LegalRepresentative: "何俊杰",
+			Status:              "存续",
+			EstablishedDate:     "2000-01-18",
+			Address:             "北京市海淀区上地十街10号百度大厦三层",
+			RegisteredCapital:   "4520万元",
+			Phone:               "010-59928888",
+			Email:               "jiangyao@baidu.com",
+			LogoURL:             "https://image.qcc.com/logo/baidu.jpg",
+			Tags:                []string{"小微企业", "高新技术企业", "专精特新中小企业"},
+		}},
+		Aggregations: models.EnterpriseSearchAggregations{
+			Provinces:  []models.EnterpriseSearchAggregation{{Code: "GD", Name: "广东省", Count: 15}},
+			Industries: []models.EnterpriseSearchAggregation{{Code: "M", Name: "科学研究和技术服务业", Count: 23}},
+		},
+	}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("SearchEnterprises() = %#v, want %#v", got, want)
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/edram/qi/internal/industries"
 	"github.com/edram/qi/internal/models"
 	"github.com/edram/qi/internal/qcc"
+	"github.com/edram/qi/internal/regions"
 )
 
 const searchProviderQCC searchProviderName = "qcc"
@@ -35,7 +36,11 @@ type qccEnterpriseSearchRequest struct {
 type qccEnterpriseSearchResponse struct {
 	Status  int    `json:"Status"`
 	Message string `json:"Message"`
-	Result  []struct {
+	Paging  struct {
+		TotalRecords int `json:"TotalRecords"`
+	} `json:"Paging"`
+	GroupItems []qccEnterpriseSearchGroup `json:"GroupItems"`
+	Result     []struct {
 		KeyNo         string `json:"KeyNo"`
 		Name          string `json:"Name"`
 		No            string `json:"No"`
@@ -48,7 +53,19 @@ type qccEnterpriseSearchResponse struct {
 		ContactNumber string `json:"ContactNumber"`
 		Email         string `json:"Email"`
 		ImageURL      string `json:"ImageUrl"`
+		TagsInfoV2    []struct {
+			Name string `json:"Name"`
+		} `json:"TagsInfoV2"`
 	} `json:"Result"`
+}
+
+type qccEnterpriseSearchGroup struct {
+	Key   string `json:"key"`
+	Items []struct {
+		Value string `json:"value"`
+		Count int    `json:"count"`
+		Name  string `json:"desc"`
+	} `json:"items"`
 }
 
 type qccPersonSearchRequest struct {
@@ -85,14 +102,14 @@ func newSearchQCC(profile, userAgent string) search {
 	return &searchQCC{api: qcc.New(qcc.Options{Profile: profile, UserAgent: userAgent})}
 }
 
-func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter enterpriseSearchFilter) ([]models.Enterprise, error) {
+func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter enterpriseSearchFilter) (models.EnterpriseSearchResult, error) {
 	searchKey, err := qccEnterpriseSearchKey(query, filter.Fields)
 	if err != nil {
-		return nil, err
+		return models.EnterpriseSearchResult{}, err
 	}
 	encodedFilter, err := qccEnterpriseSearchFilter(filter)
 	if err != nil {
-		return nil, err
+		return models.EnterpriseSearchResult{}, err
 	}
 	request := qccEnterpriseSearchRequest{
 		SearchKey:   searchKey,
@@ -102,19 +119,23 @@ func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter 
 		Filter:      encodedFilter,
 	}
 
-	var result qccEnterpriseSearchResponse
-	if err := s.api.PostJSON(ctx, "/api/search/searchMulti", request, &result); err != nil {
-		return nil, err
+	var response qccEnterpriseSearchResponse
+	if err := s.api.PostJSON(ctx, "/api/search/searchMulti", request, &response); err != nil {
+		return models.EnterpriseSearchResult{}, err
 	}
-	if err := qccStatusError("enterprise search", result.Status, result.Message); err != nil {
-		return nil, err
+	if err := qccStatusError("enterprise search", response.Status, response.Message); err != nil {
+		return models.EnterpriseSearchResult{}, err
 	}
 
-	enterprises := make([]models.Enterprise, 0, len(result.Result))
-	for _, enterprise := range result.Result {
+	enterprises := make([]models.Enterprise, 0, len(response.Result))
+	for _, enterprise := range response.Result {
 		var establishedDate string
 		if enterprise.StartDate != 0 {
 			establishedDate = time.UnixMilli(enterprise.StartDate).In(qccDateLocation).Format(time.DateOnly)
+		}
+		tags := make([]string, 0, len(enterprise.TagsInfoV2))
+		for _, tag := range enterprise.TagsInfoV2 {
+			tags = append(tags, tag.Name)
 		}
 		enterprises = append(enterprises, models.Enterprise{
 			ID:                  enterprise.KeyNo,
@@ -130,9 +151,53 @@ func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter 
 			Phone:               enterprise.ContactNumber,
 			Email:               enterprise.Email,
 			LogoURL:             enterprise.ImageURL,
+			Tags:                tags,
 		})
 	}
-	return enterprises, nil
+	aggregations, err := qccEnterpriseAggregations(response.GroupItems)
+	if err != nil {
+		return models.EnterpriseSearchResult{}, err
+	}
+	return models.EnterpriseSearchResult{
+		Total:        response.Paging.TotalRecords,
+		Enterprises:  enterprises,
+		Aggregations: aggregations,
+	}, nil
+}
+
+func qccEnterpriseAggregations(groups []qccEnterpriseSearchGroup) (models.EnterpriseSearchAggregations, error) {
+	areaCatalog, err := regions.Load(regions.ProviderQCC)
+	if err != nil {
+		return models.EnterpriseSearchAggregations{}, err
+	}
+	industryCatalog, err := industries.Load(industries.ProviderQCC)
+	if err != nil {
+		return models.EnterpriseSearchAggregations{}, err
+	}
+
+	var aggregations models.EnterpriseSearchAggregations
+	for _, group := range groups {
+		for _, item := range group.Items {
+			name := item.Name
+			switch group.Key {
+			case "province":
+				if area, resolveErr := areaCatalog.Resolve(item.Value); resolveErr == nil {
+					name = area.Name
+				}
+				aggregations.Provinces = append(aggregations.Provinces, models.EnterpriseSearchAggregation{
+					Code: item.Value, Name: name, Count: item.Count,
+				})
+			case "industrycode":
+				if industry, resolveErr := industryCatalog.Resolve(item.Value); resolveErr == nil {
+					name = industry.Name
+				}
+				aggregations.Industries = append(aggregations.Industries, models.EnterpriseSearchAggregation{
+					Code: item.Value, Name: name, Count: item.Count,
+				})
+			}
+		}
+	}
+	return aggregations, nil
 }
 
 func (s *searchQCC) SearchPeople(ctx context.Context, query string, filter personSearchFilter) ([]models.Person, error) {
