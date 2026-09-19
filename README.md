@@ -144,7 +144,11 @@ qc search ents "建筑" --provider qcc \
     {
       "id": "...",
       "name": "百度在线网络技术（北京）有限公司",
-      "tags": ["被执行人", "港股VIE", "美股VIE", "高新技术企业", "企业技术中心"]
+      "tags": ["被执行人", "港股VIE", "美股VIE", "高新技术企业", "企业技术中心"],
+      "risk": {
+        "direct": {"count": 5},
+        "associated": {"count": 27}
+      }
     }
   ],
   "aggregations": {
@@ -153,6 +157,8 @@ qc search ents "建筑" --provider qcc \
   }
 }
 ```
+
+企业的 `risk` 是风险数量摘要：`direct` 表示直接归属于企业自身的风险，`associated` 表示关联主体产生的风险。`count: 0` 表示已获取统计且确认没有风险；如果数据源没有返回风险统计，`risk` 字段会被省略，不应按 0 处理。
 
 人员搜索支持地区和行业名称筛选：
 

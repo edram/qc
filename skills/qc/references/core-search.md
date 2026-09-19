@@ -95,8 +95,21 @@ Enterprise objects can include:
 
 ```text
 id, detailUrl, name, registrationNumber, creditCode, legalRepresentative, status,
-establishedDate, address, registeredCapital, phone, email, logoUrl, tags
+establishedDate, address, registeredCapital, phone, email, logoUrl, tags, risk
 ```
+
+When present, `risk` contains counts only:
+
+```json
+{
+  "risk": {
+    "direct": {"count": 5},
+    "associated": {"count": 27}
+  }
+}
+```
+
+`direct` counts risks belonging directly to the enterprise. `associated` counts risks belonging to associated entities. A returned `count` of `0` means the provider confirmed that there are no risks in that scope. If the provider does not return risk statistics, `risk` is omitted rather than treated as zero. Risk details require a separate query.
 
 Person searches continue to write a JSON array. Person objects can include:
 

@@ -103,6 +103,10 @@ func TestSearchQCCEnterprises(t *testing.T) {
 				"ContactNumber": "010-59928888",
 				"Email": "jiangyao@baidu.com",
 				"ImageUrl": "https://image.qcc.com/logo/baidu.jpg",
+				"CountInfo": [
+					{"k": 13, "v": "5"},
+					{"k": 15, "v": "27"}
+				],
 				"TagsInfoV2": [
 					{"Type": 505, "Name": "小微企业"},
 					{"Type": 108, "Name": "高新技术企业"},
@@ -142,6 +146,10 @@ func TestSearchQCCEnterprises(t *testing.T) {
 			Email:               "jiangyao@baidu.com",
 			LogoURL:             "https://image.qcc.com/logo/baidu.jpg",
 			Tags:                []string{"小微企业", "高新技术企业", "专精特新中小企业"},
+			Risk: &models.EnterpriseRiskSummary{
+				Direct:     &models.EnterpriseRiskScope{Count: 5},
+				Associated: &models.EnterpriseRiskScope{Count: 27},
+			},
 		}},
 		Aggregations: models.EnterpriseSearchAggregations{
 			Provinces:  []models.EnterpriseSearchAggregation{{Code: "GD", Name: "广东省", Count: 15}},
@@ -151,6 +159,28 @@ func TestSearchQCCEnterprises(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("SearchEnterprises() = %#v, want %#v", got, want)
 	}
+}
+
+func TestQCCEnterpriseRisk(t *testing.T) {
+	t.Run("preserves zero counts", func(t *testing.T) {
+		got := qccEnterpriseRisk([]qccEnterpriseCountInfo{
+			{Key: 13, Value: "0"},
+			{Key: 15, Value: "0"},
+		})
+		want := &models.EnterpriseRiskSummary{
+			Direct:     &models.EnterpriseRiskScope{Count: 0},
+			Associated: &models.EnterpriseRiskScope{Count: 0},
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("qccEnterpriseRisk() = %#v, want %#v", got, want)
+		}
+	})
+
+	t.Run("omits unavailable counts", func(t *testing.T) {
+		if got := qccEnterpriseRisk(nil); got != nil {
+			t.Fatalf("qccEnterpriseRisk() = %#v, want nil", got)
+		}
+	})
 }
 
 func TestSearchQCCEnterpriseFilters(t *testing.T) {

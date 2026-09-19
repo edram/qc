@@ -56,7 +56,13 @@ type qccEnterpriseSearchResponse struct {
 		TagsInfoV2    []struct {
 			Name string `json:"Name"`
 		} `json:"TagsInfoV2"`
+		CountInfo []qccEnterpriseCountInfo `json:"CountInfo"`
 	} `json:"Result"`
+}
+
+type qccEnterpriseCountInfo struct {
+	Key   int    `json:"k"`
+	Value string `json:"v"`
 }
 
 type qccEnterpriseSearchGroup struct {
@@ -137,6 +143,7 @@ func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter 
 		for _, tag := range enterprise.TagsInfoV2 {
 			tags = append(tags, tag.Name)
 		}
+		risk := qccEnterpriseRisk(enterprise.CountInfo)
 		enterprises = append(enterprises, models.Enterprise{
 			ID:                  enterprise.KeyNo,
 			DetailURL:           "https://www.qcc.com/firm/" + enterprise.KeyNo + ".html",
@@ -152,6 +159,7 @@ func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter 
 			Email:               enterprise.Email,
 			LogoURL:             enterprise.ImageURL,
 			Tags:                tags,
+			Risk:                risk,
 		})
 	}
 	aggregations, err := qccEnterpriseAggregations(response.GroupItems)
@@ -163,6 +171,31 @@ func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter 
 		Enterprises:  enterprises,
 		Aggregations: aggregations,
 	}, nil
+}
+
+func qccEnterpriseRisk(countInfo []qccEnterpriseCountInfo) *models.EnterpriseRiskSummary {
+	// QCC's enterprise search response uses k=13 for direct risks and k=15
+	// for risks associated with other entities.
+	var risk models.EnterpriseRiskSummary
+	var hasDirect, hasAssociated bool
+	for _, item := range countInfo {
+		count, err := strconv.Atoi(strings.TrimSpace(item.Value))
+		if err != nil {
+			continue
+		}
+		switch item.Key {
+		case 13:
+			risk.Direct = &models.EnterpriseRiskScope{Count: count}
+			hasDirect = true
+		case 15:
+			risk.Associated = &models.EnterpriseRiskScope{Count: count}
+			hasAssociated = true
+		}
+	}
+	if !hasDirect && !hasAssociated {
+		return nil
+	}
+	return &risk
 }
 
 func qccEnterpriseAggregations(groups []qccEnterpriseSearchGroup) (models.EnterpriseSearchAggregations, error) {
