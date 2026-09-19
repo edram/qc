@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.0.2
+
+### 🚀 Features
+
+- **cli**:
+  - Add local industry search &nbsp;-&nbsp; by **edram** and **Codex GPT-5** [<samp>(7796a)</samp>](https://github.com/edram/qc/commit/7796a02)
+- **http**:
+  - Add configurable middleware client &nbsp;-&nbsp; by **edram** and **Codex GPT-5** [<samp>(28ea0)</samp>](https://github.com/edram/qc/commit/28ea02a)
+- **industries**:
+  - Add shared industry catalog search &nbsp;-&nbsp; by **edram** [<samp>(9125f)</samp>](https://github.com/edram/qc/commit/9125f85)
+- **qcc**:
+  - Handle response and redirect errors &nbsp;-&nbsp; by **edram** and **Codex GPT-5** [<samp>(0adee)</samp>](https://github.com/edram/qc/commit/0adee1b)
+  - Support area name search &nbsp;-&nbsp; by **edram** and **Codex GPT-5** [<samp>(e6751)</samp>](https://github.com/edram/qc/commit/e67518a)
+  - Restore industry search filters &nbsp;-&nbsp; by **edram** and **Codex GPT-5** [<samp>(76bb5)</samp>](https://github.com/edram/qc/commit/76bb557)
+- **skills**:
+  - Strengthen coding architecture guidance &nbsp;-&nbsp; by **edram** [<samp>(bcc8f)</samp>](https://github.com/edram/qc/commit/bcc8fd2)
+- **status**:
+  - Show application path &nbsp;-&nbsp; by **edram** and **Codex GPT-5** [<samp>(40a3a)</samp>](https://github.com/edram/qc/commit/40a3a0d)
+
+### 🐞 Bug Fixes
+
+- **qcc**: Stop following HTTP redirects &nbsp;-&nbsp; by **edram** and **Codex GPT-5** [<samp>(6fe4e)</samp>](https://github.com/edram/qc/commit/6fe4e16)
+- **http**: Freeze middleware chain safely &nbsp;-&nbsp; by **edram** and **Codex GPT-5** [<samp>(adff1)</samp>](https://github.com/edram/qc/commit/adff15c)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/edram/qc/compare/v0.0.1...v0.0.2)
+
 ## v0.0.1
 
 ### 🚀 Features
