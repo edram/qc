@@ -5,7 +5,21 @@ description: Search QCC enterprise and person records with supported filters and
 
 ## Usage
 
-Searches require a configured User-Agent and imported Cookies. Use `qc status` first when the session is uncertain.
+Enterprise and person searches require a configured User-Agent and imported Cookies. Use `qc status` first when the session is uncertain. The local area and industry catalogs do not require authentication.
+
+### Local catalogs
+
+Find a supported area name and provider code:
+
+```console
+qc area list --search "深圳" --provider qcc
+```
+
+Find a supported industry name and provider code:
+
+```console
+qc industry list --search "软件" --provider qcc
+```
 
 ### Enterprises
 
@@ -28,7 +42,7 @@ qc search ents "建筑" --provider qcc \
 | Flag | Accepted values |
 | --- | --- |
 | `--match` | `name`, `scope`, `introduction`, `address`, `brand`, `legal-representative`, `patent`, `trademark`, `shareholder`, `key-personnel` |
-| `--area` | QCC province label or code, such as `北京市` or `BJ` |
+| `--area` | Area name, full path, or QCC code; use `qc area list --search <query>` to find values |
 | `--industry` | Industry name, such as `建筑业`; use `qc industry list --search <query>` to find names |
 | `--status` | `active`, `moved`, `establishing`, `cancelled`, `revoked` |
 
@@ -84,6 +98,8 @@ Optional fields are omitted when QCC does not return them. Preserve the JSON out
 <!--
 Source references:
 - https://raw.githubusercontent.com/edram/qc/main/README.md
+- https://raw.githubusercontent.com/edram/qc/main/internal/cli/area.go
+- https://raw.githubusercontent.com/edram/qc/main/internal/cli/industry.go
 - https://raw.githubusercontent.com/edram/qc/main/internal/cli/search.go
 - https://raw.githubusercontent.com/edram/qc/main/internal/cli/search_qcc.go
 - https://raw.githubusercontent.com/edram/qc/main/internal/models/enterprise.go

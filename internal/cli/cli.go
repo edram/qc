@@ -16,6 +16,7 @@ type CLI struct {
 	Auth      AuthCmd          `kong:"cmd,help='Authentication and cookies.'"`
 	Config    ConfigCmd        `kong:"cmd,help='Profile configuration.'"`
 	Search    SearchCmd        `kong:"cmd,help='Search enterprise and person records.'"`
+	Area      AreaCmd          `kong:"cmd,help='Search the local area catalog.'"`
 	Industry  IndustryCmd      `kong:"cmd,help='Search the local industry catalog.'"`
 	Status    StatusCmd        `kong:"cmd,help='Show cookie and account status.'"`
 }
@@ -26,6 +27,7 @@ func New() *CLI {
 		Auth:     newAuthCmd(defaultProfileName),
 		Config:   newConfigCmd(defaultProfileName),
 		Search:   newSearchCmd(defaultProfileName, ""),
+		Area:     newAreaCmd(),
 		Industry: newIndustryCmd(),
 		Status:   newStatusCmd(defaultProfileName, ""),
 	}
@@ -44,8 +46,11 @@ func (c *CLI) loadProfileConfig() error {
 }
 
 func (c *CLI) loadProfileConfigFor(ctx *kong.Context) error {
-	if selected := ctx.Selected(); selected != nil && strings.HasSuffix(selected.FullPath(), " industry list") {
-		return nil
+	if selected := ctx.Selected(); selected != nil {
+		path := selected.FullPath()
+		if strings.HasSuffix(path, " area list") || strings.HasSuffix(path, " industry list") {
+			return nil
+		}
 	}
 	return c.loadProfileConfig()
 }

@@ -87,6 +87,7 @@ go install ./cmd/qc
 | `qc status` | 显示当前 profile、Cookie 元数据和账号状态 |
 | `qc search ents <query>` | 搜索企业 |
 | `qc search pers <query>` | 搜索人员 |
+| `qc area list` | 搜索本地地区目录 |
 | `qc industry list` | 搜索本地行业目录 |
 | `qc --help` | 查看完整命令帮助 |
 
@@ -98,6 +99,12 @@ qc search ents "百度" --provider qcc --provider aiqicha
 ```
 
 爱企查搜索尚未接入，因此当前应显式使用 `--provider qcc`。
+
+地区目录按名称搜索，并返回名称和对应 provider 编码：
+
+```console
+qc area list --search "深圳" --provider qcc
+```
 
 行业目录按名称搜索，并返回名称和对应 provider 编码：
 
@@ -122,7 +129,7 @@ qc search ents "建筑" --provider qcc \
 | 参数 | 可用值 |
 | --- | --- |
 | `--match` | `name`、`scope`、`introduction`、`address`、`brand`、`legal-representative`、`patent`、`trademark`、`shareholder`、`key-personnel` |
-| `--area` | 企查查页面显示的省份名称或省份代码，例如 `北京市`、`BJ` |
+| `--area` | 地区名称、完整路径或企查查编码，例如 `深圳市`、`广东省 深圳市`、`440300`；可以先用 `qc area list --search <关键词>` 查找 |
 | `--industry` | 行业名称，例如 `建筑业`；可以先用 `qc industry list --search <关键词>` 查找 |
 | `--status` | `active`、`moved`、`establishing`、`cancelled`、`revoked` |
 

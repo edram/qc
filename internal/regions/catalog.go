@@ -36,6 +36,7 @@ type Catalog struct {
 	byPath   map[string]Region
 	byName   map[string][]Region
 	byCode   map[string]Region
+	all      []Region
 }
 
 type rawRegion struct {
@@ -117,6 +118,47 @@ func (catalog *Catalog) Resolve(value string) (Region, error) {
 	return Region{}, fmt.Errorf("unsupported %s area %q; use an area name, full path, or code", providerName, value)
 }
 
+// Search returns regions whose name contains query.
+func (catalog *Catalog) Search(query string, limit int) []Region {
+	query = strings.ToLower(strings.Join(strings.Fields(query), " "))
+	if query == "" || limit == 0 {
+		return nil
+	}
+	result := make([]Region, 0)
+	for _, region := range catalog.all {
+		if strings.Contains(strings.ToLower(region.Name), query) {
+			result = append(result, region)
+		}
+	}
+	sort.Slice(result, func(i, j int) bool {
+		if result[i].Depth != result[j].Depth {
+			return result[i].Depth < result[j].Depth
+		}
+		if result[i].Name != result[j].Name {
+			return result[i].Name < result[j].Name
+		}
+		return result[i].ProviderCode < result[j].ProviderCode
+	})
+	if limit > 0 && len(result) > limit {
+		result = result[:limit]
+	}
+	return result
+}
+
+// TopLevel returns the provider-supported first-level regions.
+func (catalog *Catalog) TopLevel(limit int) []Region {
+	result := make([]Region, 0)
+	for _, region := range catalog.all {
+		if region.Depth == 1 {
+			result = append(result, region)
+		}
+	}
+	if limit > 0 && len(result) > limit {
+		result = result[:limit]
+	}
+	return result
+}
+
 func (catalog *Catalog) providerName() string {
 	if catalog.provider == ProviderQCC {
 		return "QCC"
@@ -194,6 +236,7 @@ func (catalog *Catalog) add(path string, region Region) {
 		}
 	}
 	catalog.byName[region.Name] = append(catalog.byName[region.Name], region)
+	catalog.all = append(catalog.all, region)
 }
 
 func areaSuggestions(byName map[string][]Region, value string, limit int) []string {
