@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.3
+
+### 🚨 Breaking Changes
+
+- **search**: Add enterprise tags and aggregations &nbsp;-&nbsp; by **edram** and **Codex GPT-5** [<samp>(cef64)</samp>](https://github.com/edram/qc/commit/cef6484)
+
+### 🚀 Features
+
+- **cli**: Add local area search &nbsp;-&nbsp; by **edram** and **Codex GPT-5** [<samp>(27700)</samp>](https://github.com/edram/qc/commit/2770038)
+- **search**: Add enterprise risk counts &nbsp;-&nbsp; by **edram** and **Codex GPT-5** [<samp>(2195b)</samp>](https://github.com/edram/qc/commit/2195b9a)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/edram/qc/compare/v0.0.2...v0.0.3)
+
 ## v0.0.2
 
 ### 🚀 Features
