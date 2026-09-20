@@ -61,8 +61,27 @@ type qccEnterpriseSearchResponse struct {
 }
 
 type qccEnterpriseCountInfo struct {
-	Key   int    `json:"k"`
-	Value string `json:"v"`
+	Key   qccEnterpriseCountKey `json:"k"`
+	Value string                `json:"v"`
+}
+
+// qccEnterpriseCountKey normalizes QCC's numeric-or-string CountInfo.k value.
+type qccEnterpriseCountKey string
+
+func (key *qccEnterpriseCountKey) UnmarshalJSON(data []byte) error {
+	var text string
+	if err := json.Unmarshal(data, &text); err == nil {
+		*key = qccEnterpriseCountKey(strings.TrimSpace(text))
+		return nil
+	}
+
+	var numeric int
+	if err := json.Unmarshal(data, &numeric); err == nil {
+		*key = qccEnterpriseCountKey(strconv.Itoa(numeric))
+		return nil
+	}
+
+	return fmt.Errorf("decode enterprise count key from %s", strings.TrimSpace(string(data)))
 }
 
 type qccEnterpriseSearchGroup struct {
@@ -184,10 +203,10 @@ func qccEnterpriseRisk(countInfo []qccEnterpriseCountInfo) *models.EnterpriseRis
 			continue
 		}
 		switch item.Key {
-		case 13:
+		case "13":
 			risk.Direct = &models.EnterpriseRiskScope{Count: count}
 			hasDirect = true
-		case 15:
+		case "15":
 			risk.Associated = &models.EnterpriseRiskScope{Count: count}
 			hasAssociated = true
 		}

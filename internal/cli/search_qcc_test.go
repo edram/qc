@@ -104,7 +104,7 @@ func TestSearchQCCEnterprises(t *testing.T) {
 				"Email": "jiangyao@baidu.com",
 				"ImageUrl": "https://image.qcc.com/logo/baidu.jpg",
 				"CountInfo": [
-					{"k": 13, "v": "5"},
+					{"k": "13", "v": "5"},
 					{"k": 15, "v": "27"}
 				],
 				"TagsInfoV2": [
@@ -164,8 +164,8 @@ func TestSearchQCCEnterprises(t *testing.T) {
 func TestQCCEnterpriseRisk(t *testing.T) {
 	t.Run("preserves zero counts", func(t *testing.T) {
 		got := qccEnterpriseRisk([]qccEnterpriseCountInfo{
-			{Key: 13, Value: "0"},
-			{Key: 15, Value: "0"},
+			{Key: "13", Value: "0"},
+			{Key: "15", Value: "0"},
 		})
 		want := &models.EnterpriseRiskSummary{
 			Direct:     &models.EnterpriseRiskScope{Count: 0},
@@ -181,6 +181,20 @@ func TestQCCEnterpriseRisk(t *testing.T) {
 			t.Fatalf("qccEnterpriseRisk() = %#v, want nil", got)
 		}
 	})
+}
+
+func TestQCCEnterpriseCountKeyUnmarshalsNumberOrString(t *testing.T) {
+	for _, raw := range []string{`13`, `"13"`} {
+		t.Run(raw, func(t *testing.T) {
+			var got qccEnterpriseCountKey
+			if err := json.Unmarshal([]byte(raw), &got); err != nil {
+				t.Fatal(err)
+			}
+			if got != "13" {
+				t.Fatalf("key = %q, want %q", got, "13")
+			}
+		})
+	}
 }
 
 func TestSearchQCCEnterpriseFilters(t *testing.T) {
