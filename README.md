@@ -1,23 +1,25 @@
 # qc
 
-`qc` 是一个面向命令行和自动化脚本的企业信息查询工具。它从本地浏览器同步登录 Cookie，通过企查查搜索企业或人员，并输出结构稳定的 JSON。
+[简体中文](README.zh-CN.md)
 
-当前状态：企查查企业搜索和人员搜索可用；爱企查数据源尚未接入。
+`qc` is a command-line and automation tool for querying Chinese enterprise information. It imports login cookies from a local browser, searches Qichacha (企查查) for enterprises or people, and returns stable JSON.
 
-## 功能
+Current status: enterprise and people searches through Qichacha are available. The Aiqicha data source is not connected yet.
 
-- 按企业名称搜索企业信息
-- 按姓名搜索人员及关联企业信息
-- 将不同数据源的响应转换为统一 JSON 模型
-- 从 Chrome、Brave、Edge、Firefox 或 Safari 同步企查查 Cookie
-- 使用 profile 隔离工作、个人等不同登录会话
-- 查看 Cookie 元数据和当前企查查账号，不输出 Cookie 值
+## Features
 
-## 安装
+- Search enterprise information by company name
+- Search people and their associated enterprises by name
+- Convert responses from different data sources into one JSON model
+- Import Qichacha cookies from Chrome, Brave, Edge, Firefox, or Safari
+- Isolate work and personal login sessions with profiles
+- View cookie metadata and the current Qichacha account without displaying cookie values
 
-从 [GitHub Releases](https://github.com/edram/qc/releases) 下载适合当前系统和架构的压缩包，解压后将 `qc` 放入 `PATH`。
+## Installation
 
-从源码构建需要 Go 1.25 或更高版本：
+Download the archive for your operating system and architecture from [GitHub Releases](https://github.com/edram/qc/releases), extract it, and put `qc` in your `PATH`.
+
+Building from source requires Go 1.25 or later:
 
 ```console
 git clone https://github.com/edram/qc.git
@@ -25,48 +27,48 @@ cd qc
 go install ./cmd/qc
 ```
 
-## 快速开始
+## Quick start
 
-企查查会校验登录 Cookie 对应的浏览器 User-Agent。两者不一致可能导致 `QCCSESSID` 更新，并使浏览器退出登录。因此，首次使用时必须保存当前登录浏览器的真实 User-Agent。
+Qichacha validates the browser User-Agent associated with your login cookies. If they do not match, Qichacha may update `QCCSESSID` and log the browser out. Save the real User-Agent from the browser that is currently logged in before your first import.
 
-1. 在已登录企查查的浏览器中打开开发者工具，在 Console 执行：
+1. Open developer tools in a browser that is logged in to Qichacha and run this in the Console:
 
    ```javascript
    navigator.userAgent
    ```
 
-2. 保存输出的完整 User-Agent：
+2. Save the complete User-Agent output:
 
    ```console
    qc config set user-agent "Mozilla/5.0 ..."
    ```
 
-3. 从同一个浏览器同步企查查 Cookie：
+3. Import Qichacha cookies from the same browser:
 
    ```console
    qc auth import --browser chrome
    ```
 
-   如果登录账号位于 Chrome 的其他用户目录，请指定浏览器 profile：
+   If the account is in another Chrome user directory, specify the browser profile:
 
    ```console
    qc auth import --browser chrome --browser-profile "Profile 1"
    ```
 
-4. 检查当前会话：
+4. Check the current session:
 
    ```console
    qc status
    ```
 
-5. 搜索企业或人员：
+5. Search for an enterprise or person:
 
    ```console
    qc search ents "百度" --provider qcc
    qc search pers "李彦宏" --provider qcc
    ```
 
-企业搜索的 JSON 结构示例：
+Example enterprise search JSON:
 
 ```json
 [
@@ -78,43 +80,69 @@ go install ./cmd/qc
 ]
 ```
 
-## 命令
+## Agent skill
 
-| 命令 | 说明 |
+This repository includes an agent skill at [`skills/qc/SKILL.md`](skills/qc/SKILL.md). It teaches AI coding assistants when and how to use `qc` for QCC searches, local area and industry catalogs, profile setup, authentication, and structured JSON output.
+
+### Install the skill
+
+Install it from GitHub with the skills CLI:
+
+```console
+npx skills@latest add edram/qc --skill qc
+```
+
+Before using the skill, install `qc` and complete the [quick start](#quick-start) to save the browser User-Agent and import Cookies.
+
+### Use the skill
+
+Start a new AI assistant session after installation, then describe the task in plain language. For example:
+
+```text
+Use the qc skill to find the QCC industry code for software in Shenzhen.
+```
+
+```text
+Use qc to search QCC enterprises named 百度 in the active status, then return the JSON fields name, status, risk, and province aggregation.
+```
+
+## Commands
+
+| Command | Description |
 | --- | --- |
-| `qc auth import` | 从浏览器同步企查查 Cookie |
-| `qc config set user-agent <value>` | 保存当前 profile 的浏览器 User-Agent |
-| `qc status` | 显示当前 profile、Cookie 元数据和账号状态 |
-| `qc search ents <query>` | 搜索企业 |
-| `qc search pers <query>` | 搜索人员 |
-| `qc area list` | 搜索本地地区目录 |
-| `qc industry list` | 搜索本地行业目录 |
-| `qc --help` | 查看完整命令帮助 |
+| `qc auth import` | Import Qichacha cookies from a browser |
+| `qc config set user-agent <value>` | Save the browser User-Agent for the current profile |
+| `qc status` | Show the current profile, cookie metadata, and account status |
+| `qc search ents <query>` | Search enterprises |
+| `qc search pers <query>` | Search people |
+| `qc area list` | Search the local area catalog |
+| `qc industry list` | Search the local industry catalog |
+| `qc --help` | Show complete command help |
 
-`--provider` 可以重复使用，也接受逗号分隔的值：
+`--provider` can be repeated and also accepts comma-separated values:
 
 ```console
 qc search ents "百度" --provider qcc
 qc search ents "百度" --provider qcc --provider aiqicha
 ```
 
-爱企查搜索尚未接入，因此当前应显式使用 `--provider qcc`。
+Aiqicha search is not connected yet, so use `--provider qcc` explicitly for now.
 
-地区目录按名称搜索，并返回名称和对应 provider 编码：
+Area catalogs search by name and return the name and provider code:
 
 ```console
 qc area list --search "深圳" --provider qcc
 ```
 
-行业目录按名称搜索，并返回名称和对应 provider 编码：
+Industry catalogs search by name and return the name and provider code:
 
 ```console
 qc industry list --search "软件" --provider qcc
 ```
 
-### 搜索筛选
+### Search filters
 
-企业搜索支持按查找范围、地区、行业和登记状态筛选。例如，查找北京建筑业中经营范围包含“建筑”的存续企业：
+Enterprise searches support filters for match scope, area, industry, and registration status. For example, find active construction enterprises in Beijing whose business scope contains “建筑”:
 
 ```console
 qc search ents "建筑" --provider qcc \
@@ -124,18 +152,18 @@ qc search ents "建筑" --provider qcc \
   --status active
 ```
 
-企业筛选参数可以重复使用，也可以传入逗号分隔的多个值：
+Filter parameters can be repeated or supplied as comma-separated values:
 
-| 参数 | 可用值 |
+| Parameter | Accepted values |
 | --- | --- |
-| `--match` | `name`、`scope`、`introduction`、`address`、`brand`、`legal-representative`、`patent`、`trademark`、`shareholder`、`key-personnel` |
-| `--area` | 地区名称、完整路径或企查查编码，例如 `深圳市`、`广东省 深圳市`、`440300`；可以先用 `qc area list --search <关键词>` 查找 |
-| `--industry` | 行业名称，例如 `建筑业`；可以先用 `qc industry list --search <关键词>` 查找 |
-| `--status` | `active`、`moved`、`establishing`、`cancelled`、`revoked` |
+| `--match` | `name`, `scope`, `introduction`, `address`, `brand`, `legal-representative`, `patent`, `trademark`, `shareholder`, `key-personnel` |
+| `--area` | An area name, full path, or Qichacha code such as `深圳市`, `广东省 深圳市`, or `440300`; use `qc area list --search <keyword>` to find one |
+| `--industry` | An industry name such as `建筑业`; use `qc industry list --search <keyword>` to find one |
+| `--status` | `active`, `moved`, `establishing`, `cancelled`, `revoked` |
 
-不传 `--match` 时默认只匹配企业名。状态值依次对应存续/在业、迁出、设立、注销和吊销。
+Without `--match`, the search matches enterprise names only. The status values correspond to active, moved, establishing, cancelled, and revoked enterprises.
 
-企业搜索返回命中总量、当前页企业和省份/国标行业聚合。企业的 `tags` 包含企查查返回的小微企业、高新技术企业、专精特新中小企业等标签：
+Enterprise searches return the total number of matches, the enterprises on the current page, and province and national-standard-industry aggregations. An enterprise's `tags` can include labels returned by Qichacha, such as small and micro enterprise, high-tech enterprise, and specialized and innovative small and medium-sized enterprise:
 
 ```json
 {
@@ -158,9 +186,9 @@ qc search ents "建筑" --provider qcc \
 }
 ```
 
-企业的 `risk` 是风险数量摘要：`direct` 表示直接归属于企业自身的风险，`associated` 表示关联主体产生的风险。`count: 0` 表示已获取统计且确认没有风险；如果数据源没有返回风险统计，`risk` 字段会被省略，不应按 0 处理。
+An enterprise's `risk` is a summary of risk counts. `direct` covers risks belonging directly to the enterprise, while `associated` covers risks from related entities. `count: 0` means that the statistic was returned and confirmed to be zero. If the data source does not return a risk statistic, the `risk` field is omitted and must not be treated as zero.
 
-人员搜索支持地区和行业名称筛选：
+People searches support area and industry name filters:
 
 ```console
 qc search pers "李彦宏" --provider qcc \
@@ -168,9 +196,9 @@ qc search pers "李彦宏" --provider qcc \
   --industry "软件和信息技术服务业"
 ```
 
-## Profile
+## Profiles
 
-全局 `--profile` 用于选择 qc 的配置和 Cookie 命名空间，默认值为 `default`。也可以通过 `QC_PROFILE` 设置默认 profile。
+The global `--profile` flag selects the qc configuration and cookie namespace. The default is `default`. You can also set the default profile with `QC_PROFILE`.
 
 ```console
 qc --profile work config set user-agent "Mozilla/5.0 ..."
@@ -179,46 +207,46 @@ qc --profile work status
 qc --profile work search ents "百度" --provider qcc
 ```
 
-以下三个参数用途不同：
+These three options serve different purposes:
 
-| 参数 | 作用 |
+| Option | Purpose |
 | --- | --- |
-| `--profile work` | 选择 qc 的 `work` 配置和 Cookie |
-| `--browser chrome` | 选择 Cookie 来源浏览器 |
-| `--browser-profile "Profile 1"` | 选择浏览器内部的用户目录 |
+| `--profile work` | Select qc's `work` configuration and cookies |
+| `--browser chrome` | Select the browser that provides the cookies |
+| `--browser-profile "Profile 1"` | Select the browser's internal user directory |
 
-## 配置与优先级
+## Configuration and precedence
 
-User-Agent 的优先级为：
+User-Agent precedence is:
 
 ```text
 --user-agent > config.<profile>.json > config.default.json
 ```
 
-非 default profile 会继承 `config.default.json`，再用自己的非空字段覆盖默认配置。`config set` 只修改当前 profile，不会复制继承值。
+Non-default profiles inherit `config.default.json`, then override it with their own non-empty fields. `config set` changes only the current profile; it does not copy inherited values.
 
-例如，`work` 可以继承默认 User-Agent，也可以单独覆盖：
+For example, `work` can inherit the default User-Agent or override it:
 
 ```console
 qc config set user-agent "Mozilla/5.0 ..."
 qc --profile work config set user-agent "Mozilla/5.0 ..."
 ```
 
-也可以只为单次命令覆盖 User-Agent，不写入配置：
+You can also override the User-Agent for one command without writing it to the configuration:
 
 ```console
 qc --user-agent "Mozilla/5.0 ..." status
 ```
 
-配置目录遵循操作系统的用户配置目录：
+The configuration directory follows the operating system's user configuration directory:
 
-| 系统 | 目录 |
+| System | Directory |
 | --- | --- |
 | macOS | `~/Library/Application Support/qc` |
 | Linux | `~/.config/qc` |
 | Windows | `%AppData%\qc` |
 
-典型文件如下：
+Typical files look like this:
 
 ```text
 qc/
@@ -229,26 +257,34 @@ qc/
     └── qcc.work.json
 ```
 
-配置只按 profile 区分，并由所有数据源共享；Cookie 同时按数据源和 profile 隔离。配置文件和 Cookie 缓存可能包含敏感信息，不应提交到版本控制或公开分享。
+Configuration is separated by profile and shared by all data sources. Cookies are isolated by both data source and profile. Configuration files and cookie caches may contain sensitive information; do not commit or share them publicly.
 
-## 会话诊断
+## Session diagnostics
 
-运行以下命令检查当前 profile 使用的 Cookie 和账号：
+Run the following command to inspect the cookies and account for the current profile:
 
 ```console
 qc status
 ```
 
-输出包含：
+The output includes:
 
-- 当前 qc profile
-- 各数据源的 Cookie 名称、域名、路径、过期时间和安全属性
-- 当前企查查账号状态及脱敏后的手机号、邮箱
-- 尚未接入的数据源状态
+- The current qc profile
+- Cookie names, domains, paths, expiration times, and security attributes for each data source
+- The current Qichacha account status and a masked phone number and email address
+- The status of data sources that are not connected yet
 
-`qc status` 不会显示 Cookie 值。如果企查查提示重新登录，请确认 User-Agent 来自导入 Cookie 的同一浏览器和同一浏览器 profile，然后重新登录并再次运行 `qc auth import`。
+`qc status` does not display cookie values. If Qichacha asks you to log in again, make sure the User-Agent comes from the same browser and browser profile used to import the cookies, then log in again and rerun `qc auth import`.
 
-## 开发
+## FAQ
+
+### Why are some Chromium cookies skipped on Windows?
+
+Chromium v20 App-Bound Encryption on Windows binds some cookie values to the browser process. When Sweet Cookie cannot decrypt one of those values, it skips that cookie, returns a warning, and keeps other readable cookies. See [Chrome's App-Bound Encryption announcement](https://security.googleblog.com/2024/07/improving-security-of-chrome-cookies-on.html) for background.
+
+If the cookies required by Qichacha are skipped, either manually configure those cookies in the current profile's cookie cache or import them from another supported browser that can be read successfully, such as Firefox. Keep the browser User-Agent matched to the cookies, and protect any manually configured cookie values.
+
+## Development
 
 ```console
 go run ./cmd/qc --help
@@ -256,23 +292,27 @@ go test -skip '^TestManual' ./...
 go vet ./...
 ```
 
-`TestManualSearchMulti` 会使用本机配置和 Cookie 真实请求企查查，只应在需要手动验证接口时单独运行：
+`TestManualSearchMulti` makes real requests to Qichacha with the local configuration and cookies. Run it separately only when you need to manually verify the interface:
 
 ```console
 go test -run '^TestManualSearchMulti$' -v ./internal/qcc
 ```
 
-## 发布
+## Releases
 
-推送语义化版本标签后，GitHub Actions 会构建 macOS、Linux 和 Windows 的 amd64、arm64 版本，并发布压缩包和校验文件：
+After you push a semantic version tag, GitHub Actions builds amd64 and arm64 archives for macOS, Linux, and Windows, then publishes the archives and checksum files:
 
 ```console
 git tag v0.1.0
 git push origin v0.1.0
 ```
 
-手动运行 `Release` workflow 只执行 snapshot 构建，不创建 GitHub Release。
+Running the `Release` workflow manually performs a snapshot build only and does not create a GitHub Release.
+
+## Disclaimer
+
+All content in this repository is provided for learning and reference only and must not be used for commercial purposes. No person or organization may use the content for illegal activities or to infringe on the lawful rights and interests of others. When using this project, comply with applicable laws and third-party service terms.
 
 ## License
 
-本项目使用 [MIT License](LICENSE)。
+This project is distributed under the [MIT License](LICENSE).
