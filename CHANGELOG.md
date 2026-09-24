@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.0
+
+### 🐞 Bug Fixes
+
+- **search**: Accept numeric or string risk keys &nbsp;-&nbsp; by **edram** and **Codex GPT-5** [<samp>(e186d)</samp>](https://github.com/edram/qc/commit/e186d83)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/edram/qc/compare/v0.0.3...v0.1.0)
+
 ## v0.0.3
 
 ### 🚨 Breaking Changes
