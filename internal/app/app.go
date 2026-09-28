@@ -9,13 +9,16 @@ import (
 // Name is the stable application identifier used in user-scoped paths.
 const Name = "qc"
 
-// Dir returns the application's directory under the current user's configuration directory.
+// Dir returns the application's directory. QC_HOME overrides the default ~/.qc path.
 func Dir() (string, error) {
-	base, err := os.UserConfigDir()
+	if override := os.Getenv("QC_HOME"); override != "" {
+		return filepath.Abs(override)
+	}
+	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(base, Name), nil
+	return filepath.Join(home, "."+Name), nil
 }
 
 // Path returns a path within the application directory.

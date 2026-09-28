@@ -238,9 +238,17 @@ qc --profile work config set user-agent "Mozilla/5.0 ..."
 qc --user-agent "Mozilla/5.0 ..." status
 ```
 
-配置目录遵循操作系统的用户配置目录：
+应用默认在所有平台的 `~/.qc` 保存配置和 Cookie 缓存。可以通过 `QC_HOME` 指定其他目录：
 
-| 系统 | 目录 |
+```console
+QC_HOME="$HOME/my-qc" qc status
+```
+
+相对路径的 `QC_HOME` 会以当前工作目录为基准；设为空值时使用默认目录。`qc status` 会显示实际使用的目录。
+
+旧目录中的文件不会自动迁移。如需保留配置和 Cookie，请在首次运行新版 CLI 前将旧目录移至 `~/.qc`（或 `QC_HOME` 指定的目录）。如果目标目录已存在，请先检查并手动合并文件。
+
+| 系统 | 旧目录 |
 | --- | --- |
 | macOS | `~/Library/Application Support/qc` |
 | Linux | `~/.config/qc` |

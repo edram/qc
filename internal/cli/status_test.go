@@ -5,7 +5,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -22,9 +21,9 @@ func (f statusCookieSourceFunc) Cookies(ctx context.Context) ([]*http.Cookie, er
 
 func TestStatusShowsMissingCookiesWithoutRequestingAuthInfo(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
 
 	authRequested := false
 	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
@@ -55,11 +54,7 @@ func TestStatusShowsMissingCookiesWithoutRequestingAuthInfo(t *testing.T) {
 	if authRequested {
 		t.Fatal("status requested auth info without cookies")
 	}
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	appPath := filepath.Join(userConfigDir, "qc")
+	appPath := filepath.Join(configDir, ".qc")
 	if got, want := output.String(), "Overview\n  Profile: work\n  App Path: "+appPath+"\n\nCookies\n  QCC: 0\n\nAccounts\n  QCC\n    Status: not authenticated\n  AIQICHA\n    Status: not implemented\n"; got != want {
 		t.Fatalf("status output = %q, want %q", got, want)
 	}

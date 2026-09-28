@@ -181,14 +181,10 @@ func TestClientReportsLoginRedirect(t *testing.T) {
 
 func TestClientClearsCookieCacheForUserAgentMismatchRedirect(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	cachePath := filepath.Join(userConfigDir, "qc", "cookies", "qcc.work.json")
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
+	cachePath := filepath.Join(configDir, ".qc", "cookies", "qcc.work.json")
 	if err := sharedcookies.Write(cachePath, []*http.Cookie{{Name: "QCCSESSID", Value: "stale"}}); err != nil {
 		t.Fatal(err)
 	}
@@ -326,13 +322,9 @@ func (f roundTripFunc) RoundTrip(request *http.Request) (*http.Response, error) 
 
 func TestClientCachesBrowserCookiesByDefault(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
 
 	browserReads := 0
 	restore := sharedcookies.SetReadCookies(func(context.Context, sweetcookie.Options) (sweetcookie.Result, error) {
@@ -365,7 +357,7 @@ func TestClientCachesBrowserCookiesByDefault(t *testing.T) {
 	if browserReads != 1 {
 		t.Fatalf("browser reads = %d, want 1", browserReads)
 	}
-	cachePath := filepath.Join(userConfigDir, "qc", "cookies", "qcc.default.json")
+	cachePath := filepath.Join(configDir, ".qc", "cookies", "qcc.default.json")
 	if _, err := os.Stat(cachePath); err != nil {
 		t.Fatalf("cookie cache %q: %v", cachePath, err)
 	}
@@ -373,14 +365,10 @@ func TestClientCachesBrowserCookiesByDefault(t *testing.T) {
 
 func TestClientRefreshesExpiredCookieCache(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	cachePath := filepath.Join(userConfigDir, "qc", "cookies", "qcc.default.json")
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
+	cachePath := filepath.Join(configDir, ".qc", "cookies", "qcc.default.json")
 	if err := os.MkdirAll(filepath.Dir(cachePath), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -421,14 +409,10 @@ func TestClientRefreshesExpiredCookieCache(t *testing.T) {
 
 func TestClientUsesSelectedCookieProfile(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	cachePath := filepath.Join(userConfigDir, "qc", "cookies", "qcc.work.json")
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
+	cachePath := filepath.Join(configDir, ".qc", "cookies", "qcc.work.json")
 	if err := os.MkdirAll(filepath.Dir(cachePath), 0o755); err != nil {
 		t.Fatal(err)
 	}

@@ -1,16 +1,15 @@
 package config
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 )
 
 func TestUserAgentIsStoredByProfile(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
 
 	path, err := SetUserAgent("work", "work-user-agent")
 	if err != nil {
@@ -19,11 +18,7 @@ func TestUserAgentIsStoredByProfile(t *testing.T) {
 	if path == "" {
 		t.Fatal("SetUserAgent() path is empty")
 	}
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantPath := filepath.Join(userConfigDir, "qc", "config.work.json")
+	wantPath := filepath.Join(configDir, ".qc", "config.work.json")
 	if path != wantPath {
 		t.Fatalf("SetUserAgent() path = %q, want %q", path, wantPath)
 	}
@@ -55,9 +50,9 @@ func TestUserAgentIsStoredByProfile(t *testing.T) {
 
 func TestUserAgentInheritsDefaultProfile(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
 
 	if _, err := SetUserAgent("default", "default-user-agent"); err != nil {
 		t.Fatal(err)

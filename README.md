@@ -238,9 +238,17 @@ You can also override the User-Agent for one command without writing it to the c
 qc --user-agent "Mozilla/5.0 ..." status
 ```
 
-The configuration directory follows the operating system's user configuration directory:
+The application stores configuration and cookie caches in `~/.qc` by default on all platforms. Set `QC_HOME` to use another directory:
 
-| System | Directory |
+```console
+QC_HOME="$HOME/my-qc" qc status
+```
+
+Relative `QC_HOME` paths are resolved against the current working directory. An empty `QC_HOME` uses the default path. `qc status` shows the directory in use.
+
+Existing files are not moved automatically. To keep your configuration and cookies, move the old directory to `~/.qc` (or your `QC_HOME`) before running the updated CLI. If the destination already exists, check and merge its files manually.
+
+| System | Previous directory |
 | --- | --- |
 | macOS | `~/Library/Application Support/qc` |
 | Linux | `~/.config/qc` |

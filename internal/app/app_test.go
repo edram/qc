@@ -7,16 +7,11 @@ import (
 )
 
 func TestDirReturnsApplicationDirectory(t *testing.T) {
-	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
-	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
-
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := filepath.Join(userConfigDir, "qc")
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Setenv("QC_HOME", "")
+	want := filepath.Join(home, ".qc")
 
 	got, err := Dir()
 	if err != nil {
@@ -27,16 +22,39 @@ func TestDirReturnsApplicationDirectory(t *testing.T) {
 	}
 }
 
-func TestPathJoinsApplicationRelativeElements(t *testing.T) {
-	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
-	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
+func TestDirUsesQCHome(t *testing.T) {
+	customDir := filepath.Join(t.TempDir(), "custom-qc")
+	t.Setenv("QC_HOME", customDir)
 
-	appDir, err := Dir()
+	got, err := Dir()
 	if err != nil {
 		t.Fatal(err)
 	}
+	if got != customDir {
+		t.Fatalf("Dir() = %q, want %q", got, customDir)
+	}
+}
+
+func TestDirResolvesRelativeQCHome(t *testing.T) {
+	t.Setenv("QC_HOME", "custom-qc")
+	workingDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := Dir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := filepath.Join(workingDir, "custom-qc")
+	if got != want {
+		t.Fatalf("Dir() = %q, want %q", got, want)
+	}
+}
+
+func TestPathJoinsApplicationRelativeElements(t *testing.T) {
+	appDir := filepath.Join(t.TempDir(), "custom-qc")
+	t.Setenv("QC_HOME", appDir)
 	want := filepath.Join(appDir, "cookies", "qcc.work.json")
 
 	got, err := Path("cookies", "qcc.work.json")

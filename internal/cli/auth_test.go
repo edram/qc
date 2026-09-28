@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -17,14 +16,10 @@ import (
 
 func TestAuthImportSeparatesTargetAndBrowserProfiles(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	cachePath := filepath.Join(userConfigDir, "qc", "cookies", "qcc.work.json")
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
+	cachePath := filepath.Join(configDir, ".qc", "cookies", "qcc.work.json")
 	if err := sharedcookies.Write(cachePath, []*http.Cookie{{Name: "stale_cookie", Value: "stale"}}); err != nil {
 		t.Fatal(err)
 	}
@@ -75,9 +70,9 @@ func TestAuthImportSeparatesTargetAndBrowserProfiles(t *testing.T) {
 
 func TestAuthImportDefaultsToChrome(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
 
 	var options sweetcookie.Options
 	restore := sharedcookies.SetReadCookies(func(_ context.Context, got sweetcookie.Options) (sweetcookie.Result, error) {
@@ -98,14 +93,10 @@ func TestAuthImportDefaultsToChrome(t *testing.T) {
 
 func TestAuthImportFailureKeepsExistingCookiesAndReportsWarning(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	cachePath := filepath.Join(userConfigDir, "qc", "cookies", "qcc.default.json")
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
+	cachePath := filepath.Join(configDir, ".qc", "cookies", "qcc.default.json")
 	if err := sharedcookies.Write(cachePath, []*http.Cookie{{Name: "QCCSESSID", Value: "existing"}}); err != nil {
 		t.Fatal(err)
 	}

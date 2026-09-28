@@ -71,9 +71,9 @@ func TestProfileFlag(t *testing.T) {
 
 func TestUserAgentFlag(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
 	if _, err := appconfig.SetUserAgent("default", "persisted-user-agent"); err != nil {
 		t.Fatal(err)
 	}
@@ -96,9 +96,9 @@ func TestUserAgentFlag(t *testing.T) {
 
 func TestConfigSetUserAgentForProfile(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -120,9 +120,9 @@ func TestConfigSetUserAgentForProfile(t *testing.T) {
 
 func TestCLIUsesPersistedProfileUserAgent(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
 	if _, err := appconfig.SetUserAgent("work", "persisted-user-agent"); err != nil {
 		t.Fatal(err)
 	}
@@ -139,14 +139,10 @@ func TestCLIUsesPersistedProfileUserAgent(t *testing.T) {
 
 func TestCLIConfiguresSelectedProfile(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("APPDATA", configDir)
 	t.Setenv("HOME", configDir)
-	t.Setenv("XDG_CONFIG_HOME", configDir)
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	cachePath := filepath.Join(userConfigDir, "qc", "cookies", "qcc.work.json")
+	t.Setenv("USERPROFILE", configDir)
+	t.Setenv("QC_HOME", "")
+	cachePath := filepath.Join(configDir, ".qc", "cookies", "qcc.work.json")
 	if err := os.MkdirAll(filepath.Dir(cachePath), 0o755); err != nil {
 		t.Fatal(err)
 	}
