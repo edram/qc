@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.0
+
+### 🚨 Breaking Changes
+
+- **app**: Default to ~/.qc and support QC_HOME &nbsp;-&nbsp; by **edram** and **Codex GPT-6** [<samp>(97b52)</samp>](https://github.com/edram/qc/commit/97b52a7)
+
+### 🚀 Features
+
+- **install**: Add curl installer &nbsp;-&nbsp; by **edram** and **Codex GPT-6** [<samp>(e20c0)</samp>](https://github.com/edram/qc/commit/e20c0b7)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/edram/qc/compare/v0.1.0...v0.2.0)
+
 ## v0.1.0
 
 ### 🐞 Bug Fixes
