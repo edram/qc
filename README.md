@@ -17,7 +17,20 @@ Current status: enterprise and people searches through Qichacha are available. T
 
 ## Installation
 
-Download the archive for your operating system and architecture from [GitHub Releases](https://github.com/edram/qc/releases), extract it, and put `qc` in your `PATH`.
+On Linux or macOS, install the latest release into `~/.local/bin` with:
+
+```console
+curl -fsSL https://raw.githubusercontent.com/edram/qc/main/scripts/install.sh | bash
+```
+
+The script detects the operating system and architecture, downloads the matching archive from [GitHub Releases](https://github.com/edram/qc/releases), verifies its SHA-256 checksum, and installs `qc`. Use `--version` to pin a release or `--install-dir` to choose another directory:
+
+```console
+curl -fsSL https://raw.githubusercontent.com/edram/qc/main/scripts/install.sh | bash -s -- --version 0.1.0
+curl -fsSL https://raw.githubusercontent.com/edram/qc/main/scripts/install.sh | bash -s -- --install-dir "$HOME/bin"
+```
+
+Add the install directory to `PATH` if it is not already there. You can also download the archive for your operating system and architecture from [GitHub Releases](https://github.com/edram/qc/releases), extract it, and put `qc` in your `PATH`.
 
 Building from source requires Go 1.25 or later:
 
@@ -315,7 +328,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-Running the `Release` workflow manually performs a snapshot build only and does not create a GitHub Release.
+Running the `Release` workflow manually creates the tag and GitHub Release for the version you provide.
 
 ## Disclaimer
 

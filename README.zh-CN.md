@@ -17,7 +17,20 @@
 
 ## 安装
 
-从 [GitHub Releases](https://github.com/edram/qc/releases) 下载适合当前系统和架构的压缩包，解压后将 `qc` 放入 `PATH`。
+在 Linux 或 macOS 上，可以运行下面的命令，将最新版本安装到 `~/.local/bin`：
+
+```console
+curl -fsSL https://raw.githubusercontent.com/edram/qc/main/scripts/install.sh | bash
+```
+
+脚本会识别当前系统和架构，从 [GitHub Releases](https://github.com/edram/qc/releases) 下载对应压缩包，校验 SHA-256 后安装 `qc`。可以使用 `--version` 固定版本，或使用 `--install-dir` 指定安装目录：
+
+```console
+curl -fsSL https://raw.githubusercontent.com/edram/qc/main/scripts/install.sh | bash -s -- --version 0.1.0
+curl -fsSL https://raw.githubusercontent.com/edram/qc/main/scripts/install.sh | bash -s -- --install-dir "$HOME/bin"
+```
+
+如果安装目录尚未加入 `PATH`，请先将其加入。也可以从 [GitHub Releases](https://github.com/edram/qc/releases) 下载适合当前系统和架构的压缩包，解压后将 `qc` 放入 `PATH`。
 
 从源码构建需要 Go 1.25 或更高版本：
 
@@ -315,7 +328,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-手动运行 `Release` workflow 只执行 snapshot 构建，不创建 GitHub Release。
+手动运行 `Release` workflow 会根据输入的版本创建 tag 和 GitHub Release。
 
 ## 免责声明
 
