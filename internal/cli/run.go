@@ -15,6 +15,7 @@ func Execute(args []string, stdout, stderr io.Writer) int {
 	command.Area.List.output = stdout
 	command.Industry.List.output = stdout
 	command.Status.output = stdout
+	command.Update.output = stdout
 	exitCode := -1
 	parser, err := kong.New(
 		command,

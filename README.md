@@ -126,6 +126,7 @@ Use qc to search QCC enterprises named 百度 in the active status, then return 
 | `qc auth import` | Import Qichacha cookies from a browser |
 | `qc config set user-agent <value>` | Save the browser User-Agent for the current profile |
 | `qc status` | Show the current profile, cookie metadata, and account status |
+| `qc update` | Download and install the latest release |
 | `qc search ents <query>` | Search enterprises |
 | `qc search pers <query>` | Search people |
 | `qc area list` | Search the local area catalog |
@@ -317,6 +318,14 @@ go run ./cmd/qc --help
 go test -skip '^TestManual' ./...
 go vet ./...
 ```
+
+Installed release binaries can update themselves from GitHub Releases:
+
+```console
+qc update
+```
+
+The command verifies the release SHA-256 checksum before replacing the current executable. The executable directory must be writable, and source builds (`qc --version` reports `dev`) update to the latest release.
 
 `TestManualSearchMulti` makes real requests to Qichacha with the local configuration and cookies. Run it separately only when you need to manually verify the interface:
 

@@ -126,6 +126,7 @@ npx skills@latest add edram/qc --skill qc
 | `qc auth import` | 从浏览器同步企查查 Cookie |
 | `qc config set user-agent <value>` | 保存当前 profile 的浏览器 User-Agent |
 | `qc status` | 显示当前 profile、Cookie 元数据和账号状态 |
+| `qc update` | 下载并安装最新版本 |
 | `qc search ents <query>` | 搜索企业 |
 | `qc search pers <query>` | 搜索人员 |
 | `qc area list` | 搜索本地地区目录 |
@@ -317,6 +318,14 @@ go run ./cmd/qc --help
 go test -skip '^TestManual' ./...
 go vet ./...
 ```
+
+已安装的发行版可以从 GitHub Releases 自己更新：
+
+```console
+qc update
+```
+
+命令会在替换当前可执行文件前校验发行包的 SHA-256。可执行文件所在目录必须可写；源码构建版本（`qc --version` 显示 `dev`）会更新到最新发行版。
 
 `TestManualSearchMulti` 会使用本机配置和 Cookie 真实请求企查查，只应在需要手动验证接口时单独运行：
 

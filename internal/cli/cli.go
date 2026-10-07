@@ -19,6 +19,7 @@ type CLI struct {
 	Area      AreaCmd          `kong:"cmd,help='Search the local area catalog.'"`
 	Industry  IndustryCmd      `kong:"cmd,help='Search the local industry catalog.'"`
 	Status    StatusCmd        `kong:"cmd,help='Show cookie and account status.'"`
+	Update    UpdateCmd        `kong:"cmd,help='Update qc to the latest release.'"`
 }
 
 func New() *CLI {
@@ -30,6 +31,7 @@ func New() *CLI {
 		Area:     newAreaCmd(),
 		Industry: newIndustryCmd(),
 		Status:   newStatusCmd(defaultProfileName, ""),
+		Update:   newUpdateCmd(),
 	}
 }
 
@@ -48,7 +50,7 @@ func (c *CLI) loadProfileConfig() error {
 func (c *CLI) loadProfileConfigFor(ctx *kong.Context) error {
 	if selected := ctx.Selected(); selected != nil {
 		path := selected.FullPath()
-		if strings.HasSuffix(path, " area list") || strings.HasSuffix(path, " industry list") {
+		if strings.HasSuffix(path, " area list") || strings.HasSuffix(path, " industry list") || strings.HasSuffix(path, " update") {
 			return nil
 		}
 	}

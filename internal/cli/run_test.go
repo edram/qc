@@ -55,6 +55,20 @@ func TestStatusCommandPath(t *testing.T) {
 	}
 }
 
+func TestUpdateCommandPath(t *testing.T) {
+	parser, err := kong.New(New(), kong.Name("qc"), kong.Exit(func(int) {}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, err := parser.Parse([]string{"update"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := ctx.Command(); got != "update" {
+		t.Fatalf("Command() = %q, want %q", got, "update")
+	}
+}
+
 func TestProfileFlag(t *testing.T) {
 	command := New()
 	parser, err := kong.New(command, kong.Name("qc"), kong.Exit(func(int) {}))

@@ -20,6 +20,7 @@ qc
 ├── config set user-agent
 ├── auth import
 ├── status
+├── update
 ├── area list
 ├── industry list
 └── search
