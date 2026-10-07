@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.3.0
+
+### 🚀 Features
+
+- **search**: Expose administrative divisions &nbsp;-&nbsp; by **edram** and **Codex GPT-6** [<samp>(3d070)</samp>](https://github.com/edram/qc/commit/3d0700d)
+
+### 🐞 Bug Fixes
+
+- **cli**: Preserve ampersands in JSON URLs &nbsp;-&nbsp; by **edram** and **Codex GPT-6** [<samp>(50ecb)</samp>](https://github.com/edram/qc/commit/50ecb71)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/edram/qc/compare/v0.2.0...v0.3.0)
+
 ## v0.2.0
 
 ### 🚨 Breaking Changes
