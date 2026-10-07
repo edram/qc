@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 
@@ -42,7 +41,7 @@ func (cmd *AreaListCmd) Run() error {
 			Code: area.ProviderCode,
 		})
 	}
-	return json.NewEncoder(cmd.output).Encode(output)
+	return encodeJSON(cmd.output, output)
 }
 
 type areaListResult struct {

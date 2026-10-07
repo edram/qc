@@ -66,9 +66,10 @@ func TestSearchEnterprisesWritesModels(t *testing.T) {
 		qcc: searchStub{enterpriseResult: models.EnterpriseSearchResult{
 			Total: 64,
 			Enterprises: []models.Enterprise{{
-				ID:   "3f603703d59a04cb",
-				Name: "百度在线网络技术（北京）有限公司",
-				Tags: []string{"高新技术企业"},
+				ID:      "3f603703d59a04cb",
+				Name:    "百度在线网络技术（北京）有限公司",
+				LogoURL: "https://image.qcc.com/logo.jpg?x=1&y=2",
+				Tags:    []string{"高新技术企业"},
 			}},
 			Aggregations: models.EnterpriseSearchAggregations{
 				Provinces:  []models.EnterpriseSearchAggregation{{Code: "BJ", Name: "北京市", Count: 7}},
@@ -82,7 +83,7 @@ func TestSearchEnterprisesWritesModels(t *testing.T) {
 	if err := command.Run(&searchCmd); err != nil {
 		t.Fatal(err)
 	}
-	const want = `{"total":64,"enterprises":[{"id":"3f603703d59a04cb","name":"百度在线网络技术（北京）有限公司","tags":["高新技术企业"]}],"aggregations":{"provinces":[{"code":"BJ","name":"北京市","count":7}],"industries":[{"code":"M","name":"科学研究和技术服务业","count":23}]}}` + "\n"
+	const want = `{"total":64,"enterprises":[{"id":"3f603703d59a04cb","name":"百度在线网络技术（北京）有限公司","logoUrl":"https://image.qcc.com/logo.jpg?x=1&y=2","tags":["高新技术企业"]}],"aggregations":{"provinces":[{"code":"BJ","name":"北京市","count":7}],"industries":[{"code":"M","name":"科学研究和技术服务业","count":23}]}}` + "\n"
 	if got := output.String(); got != want {
 		t.Fatalf("output = %q, want %q", got, want)
 	}

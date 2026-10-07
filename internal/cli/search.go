@@ -122,7 +122,7 @@ func (cmd *SearchEntsCmd) Run(searchCmd *SearchCmd) error {
 			found.Aggregations.Industries,
 		)
 	}
-	return json.NewEncoder(searchCmd.output).Encode(result)
+	return encodeJSON(searchCmd.output, result)
 }
 
 func mergeEnterpriseSearchAggregations(current, additional []models.EnterpriseSearchAggregation) []models.EnterpriseSearchAggregation {
@@ -164,5 +164,11 @@ func (cmd *SearchPersCmd) Run(searchCmd *SearchCmd) error {
 		}
 		people = append(people, found...)
 	}
-	return json.NewEncoder(searchCmd.output).Encode(people)
+	return encodeJSON(searchCmd.output, people)
+}
+
+func encodeJSON(output io.Writer, value any) error {
+	encoder := json.NewEncoder(output)
+	encoder.SetEscapeHTML(false)
+	return encoder.Encode(value)
 }
