@@ -1,22 +1,22 @@
 ---
 name: core-types
-description: All 11 commit types with SemVer correlation and usage guidance
+description: Common commit types, their project-level SemVer conventions, and usage guidance
 ---
 
 ## Usage
 
-| Type | SemVer | Use for |
+| Type | Typical SemVer impact | Use for |
 |------|--------|---------|
 | `feat` | MINOR | New feature visible to users or API consumers |
 | `fix` | PATCH | Bug fix |
-| `perf` | PATCH | Performance improvement with no API change |
+| `perf` | Project convention | Performance improvement with no behavior change |
 | `refactor` | — | Code restructuring — no new feature, no bug fix |
 | `style` | — | Formatting, whitespace, missing semicolons — zero logic change |
 | `test` | — | Adding or correcting tests |
 | `docs` | — | Documentation only |
-| `build` | — | Build system, tooling config, or external dependency changes |
-| `ci` | — | CI/CD configuration files and scripts |
-| `chore` | — | Miscellaneous maintenance; does not touch source or test files |
+| `build` | — | Build system, packaging, tooling config, or external dependency changes |
+| `ci` | — | CI/CD configuration and workflow changes |
+| `chore` | — | Maintenance that does not fit a more specific type and has no direct user-facing behavior |
 | `revert` | — | Reverts a previous commit |
 
 ```
@@ -45,7 +45,8 @@ revert: feat(api): add pagination to GET /users
 
 ### `revert` specifics
 
-Header uses the original commit's full header:
+Use the project's established revert format. When following Git's standard
+format, the header uses the original commit's full header and the body includes:
 ```
 revert: feat(api): add pagination to GET /users
 
@@ -53,14 +54,15 @@ This reverts commit a1b2c3d. The pagination implementation caused
 a regression in the search endpoint response time.
 ```
 
-Body MUST include `This reverts commit <SHA>` plus the reason.
+Include the reason when it helps explain why the revert is necessary.
 
 ## Key Points
 
-- Only `feat` and `fix` have formal SemVer semantics per the spec; all other types are community convention
-- `refactor` vs `chore`: `refactor` touches production source code; `chore` does not
+- Only `feat`, `fix`, and breaking-change markers have formal SemVer implications in the spec; other type mappings are project conventions
+- `refactor` vs `chore`: use `refactor` for structural source-code changes; use `chore` for maintenance without a more specific type or direct user-facing behavior
 - `style` vs `refactor`: `style` is purely cosmetic (a formatter ran); `refactor` changes structure
 - Adding a breaking change to any type bumps MAJOR regardless of the type's normal SemVer level
+- The spec does not define a universal list of types; use the project's existing type vocabulary when it differs from this common set
 
 <!--
 Source references:

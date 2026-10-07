@@ -36,10 +36,10 @@ Refs: #42
 
 ### Header rules
 
-- **Type**: lowercase noun (`feat`, `fix`, `docs`, …)
-- **Scope**: optional, lowercase noun in parentheses — describes the affected area
+- **Type**: lowercase noun by default (`feat`, `fix`, `docs`, …); use the project's established vocabulary when it differs
+- **Scope**: optional noun in parentheses — describes the affected area; match the project's scope naming convention
 - **`!`**: placed immediately before the colon to flag a breaking change
-- **Description**: imperative present tense ("add", not "added" or "adds"); lowercase first letter; no trailing period; ≤72 chars total (aim ≤50 for description alone)
+- **Description**: imperative present tense ("add", not "added" or "adds"); no trailing period; follow the project's capitalization and length convention, or use ≤72 characters as a practical default (aim ≤50 for the description alone)
 
 ### Body rules
 
