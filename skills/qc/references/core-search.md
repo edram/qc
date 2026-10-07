@@ -81,6 +81,11 @@ Enterprise searches write an object containing the full match count, the current
     {
       "id": "...",
       "name": "百度在线网络技术（北京）有限公司",
+      "administrativeDivisions": {
+        "province": "北京市",
+        "city": "北京市",
+        "area": "海淀区"
+      },
       "tags": ["被执行人", "港股VIE", "美股VIE", "高新技术企业", "企业技术中心"]
     }
   ],
@@ -95,7 +100,8 @@ Enterprise objects can include:
 
 ```text
 id, detailUrl, name, registrationNumber, creditCode, legalRepresentative, status,
-establishedDate, address, registeredCapital, phone, email, logoUrl, tags, risk
+establishedDate, address, administrativeDivisions, registeredCapital, phone, email,
+logoUrl, tags, risk
 ```
 
 When present, `risk` contains counts only:

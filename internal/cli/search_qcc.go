@@ -41,14 +41,19 @@ type qccEnterpriseSearchResponse struct {
 	} `json:"Paging"`
 	GroupItems []qccEnterpriseSearchGroup `json:"GroupItems"`
 	Result     []struct {
-		KeyNo         string `json:"KeyNo"`
-		Name          string `json:"Name"`
-		No            string `json:"No"`
-		CreditCode    string `json:"CreditCode"`
-		OperName      string `json:"OperName"`
-		Status        string `json:"Status"`
-		StartDate     int64  `json:"StartDate"`
-		Address       string `json:"Address"`
+		KeyNo      string `json:"KeyNo"`
+		Name       string `json:"Name"`
+		No         string `json:"No"`
+		CreditCode string `json:"CreditCode"`
+		OperName   string `json:"OperName"`
+		Status     string `json:"Status"`
+		StartDate  int64  `json:"StartDate"`
+		Address    string `json:"Address"`
+		Area       struct {
+			Province string `json:"Province"`
+			City     string `json:"City"`
+			County   string `json:"County"`
+		} `json:"Area"`
 		RegistCapi    string `json:"RegistCapi"`
 		ContactNumber string `json:"ContactNumber"`
 		Email         string `json:"Email"`
@@ -163,22 +168,24 @@ func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter 
 			tags = append(tags, tag.Name)
 		}
 		risk := qccEnterpriseRisk(enterprise.CountInfo)
+		administrativeDivisions := qccEnterpriseAdministrativeDivisions(enterprise.Area.Province, enterprise.Area.City, enterprise.Area.County)
 		enterprises = append(enterprises, models.Enterprise{
-			ID:                  enterprise.KeyNo,
-			DetailURL:           "https://www.qcc.com/firm/" + enterprise.KeyNo + ".html",
-			Name:                qccText(enterprise.Name),
-			RegistrationNumber:  enterprise.No,
-			CreditCode:          qccText(enterprise.CreditCode),
-			LegalRepresentative: enterprise.OperName,
-			Status:              enterprise.Status,
-			EstablishedDate:     establishedDate,
-			Address:             enterprise.Address,
-			RegisteredCapital:   enterprise.RegistCapi,
-			Phone:               enterprise.ContactNumber,
-			Email:               enterprise.Email,
-			LogoURL:             enterprise.ImageURL,
-			Tags:                tags,
-			Risk:                risk,
+			ID:                      enterprise.KeyNo,
+			DetailURL:               "https://www.qcc.com/firm/" + enterprise.KeyNo + ".html",
+			Name:                    qccText(enterprise.Name),
+			RegistrationNumber:      enterprise.No,
+			CreditCode:              qccText(enterprise.CreditCode),
+			LegalRepresentative:     enterprise.OperName,
+			Status:                  enterprise.Status,
+			EstablishedDate:         establishedDate,
+			Address:                 enterprise.Address,
+			AdministrativeDivisions: administrativeDivisions,
+			RegisteredCapital:       enterprise.RegistCapi,
+			Phone:                   enterprise.ContactNumber,
+			Email:                   enterprise.Email,
+			LogoURL:                 enterprise.ImageURL,
+			Tags:                    tags,
+			Risk:                    risk,
 		})
 	}
 	aggregations, err := qccEnterpriseAggregations(response.GroupItems)
@@ -190,6 +197,18 @@ func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter 
 		Enterprises:  enterprises,
 		Aggregations: aggregations,
 	}, nil
+}
+
+func qccEnterpriseAdministrativeDivisions(province, city, area string) *models.EnterpriseAdministrativeDivisions {
+	divisions := &models.EnterpriseAdministrativeDivisions{
+		Province: qccText(province),
+		City:     qccText(city),
+		Area:     qccText(area),
+	}
+	if divisions.Province == "" && divisions.City == "" && divisions.Area == "" {
+		return nil
+	}
+	return divisions
 }
 
 func qccEnterpriseRisk(countInfo []qccEnterpriseCountInfo) *models.EnterpriseRiskSummary {

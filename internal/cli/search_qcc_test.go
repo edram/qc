@@ -99,6 +99,11 @@ func TestSearchQCCEnterprises(t *testing.T) {
 				"Status": "存续",
 				"StartDate": 948124800000,
 				"Address": "北京市海淀区上地十街10号百度大厦三层",
+				"Area": {
+					"Province": "北京市",
+					"City": "北京市",
+					"County": "海淀区"
+				},
 				"RegistCapi": "4520万元",
 				"ContactNumber": "010-59928888",
 				"Email": "jiangyao@baidu.com",
@@ -141,11 +146,16 @@ func TestSearchQCCEnterprises(t *testing.T) {
 			Status:              "存续",
 			EstablishedDate:     "2000-01-18",
 			Address:             "北京市海淀区上地十街10号百度大厦三层",
-			RegisteredCapital:   "4520万元",
-			Phone:               "010-59928888",
-			Email:               "jiangyao@baidu.com",
-			LogoURL:             "https://image.qcc.com/logo/baidu.jpg",
-			Tags:                []string{"小微企业", "高新技术企业", "专精特新中小企业"},
+			AdministrativeDivisions: &models.EnterpriseAdministrativeDivisions{
+				Province: "北京市",
+				City:     "北京市",
+				Area:     "海淀区",
+			},
+			RegisteredCapital: "4520万元",
+			Phone:             "010-59928888",
+			Email:             "jiangyao@baidu.com",
+			LogoURL:           "https://image.qcc.com/logo/baidu.jpg",
+			Tags:              []string{"小微企业", "高新技术企业", "专精特新中小企业"},
 			Risk: &models.EnterpriseRiskSummary{
 				Direct:     &models.EnterpriseRiskScope{Count: 5},
 				Associated: &models.EnterpriseRiskScope{Count: 27},
@@ -158,6 +168,31 @@ func TestSearchQCCEnterprises(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("SearchEnterprises() = %#v, want %#v", got, want)
+	}
+	encoded, err := json.Marshal(got.Enterprises[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{`"administrativeDivisions":{"province":"北京市","city":"北京市","area":"海淀区"}`} {
+		if !strings.Contains(string(encoded), field) {
+			t.Fatalf("enterprise JSON = %s, want %s", encoded, field)
+		}
+	}
+}
+
+func TestQCCEnterpriseAdministrativeDivisions(t *testing.T) {
+	got := qccEnterpriseAdministrativeDivisions("<em>浙江省</em>", "金华市", "婺城区")
+	want := &models.EnterpriseAdministrativeDivisions{
+		Province: "浙江省",
+		City:     "金华市",
+		Area:     "婺城区",
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("qccEnterpriseAdministrativeDivisions() = %#v, want %#v", got, want)
+	}
+
+	if got := qccEnterpriseAdministrativeDivisions("", "", ""); got != nil {
+		t.Fatalf("qccEnterpriseAdministrativeDivisions() = %#v, want nil", got)
 	}
 }
 

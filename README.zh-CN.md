@@ -185,6 +185,11 @@ qc search ents "建筑" --provider qcc \
     {
       "id": "...",
       "name": "百度在线网络技术（北京）有限公司",
+      "administrativeDivisions": {
+        "province": "北京市",
+        "city": "北京市",
+        "area": "海淀区"
+      },
       "tags": ["被执行人", "港股VIE", "美股VIE", "高新技术企业", "企业技术中心"],
       "risk": {
         "direct": {"count": 5},
