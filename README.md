@@ -2,13 +2,14 @@
 
 [简体中文](README.zh-CN.md)
 
-`qc` is a command-line and automation tool for querying Chinese enterprise information. It imports login cookies from a local browser, searches Qichacha (企查查) for enterprises or people, and returns stable JSON.
+`qc` is a command-line and automation tool for querying Chinese enterprise information. It imports login cookies from a local browser, searches Qichacha (企查查) for enterprises or people, queries one enterprise by its QCC ID, and returns stable JSON.
 
-Current status: enterprise and people searches through Qichacha are available. The Aiqicha data source is not connected yet.
+Current status: enterprise and people searches plus QCC ID detail queries through Qichacha are available. The Aiqicha data source is not connected yet.
 
 ## Features
 
 - Search enterprise information by company name
+- Query detailed enterprise information by QCC ID
 - Search people and their associated enterprises by name
 - Convert responses from different data sources into one JSON model
 - Import Qichacha cookies from Chrome, Brave, Edge, Firefox, or Safari
@@ -79,6 +80,7 @@ Qichacha validates the browser User-Agent associated with your login cookies. If
    ```console
    qc search ents "百度" --provider qcc
    qc search pers "李彦宏" --provider qcc
+   qc ent view "qc/3f603703d59a04cb"
    ```
 
 Example enterprise search JSON:
@@ -129,6 +131,7 @@ Use qc to search QCC enterprises named 百度 in the active status, then return 
 | `qc update` | Download and install the latest release |
 | `qc search ents <query>` | Search enterprises |
 | `qc search pers <query>` | Search people |
+| `qc ent view <qc/id>` | View one normalized enterprise |
 | `qc area list` | Search the local area catalog |
 | `qc industry list` | Search the local industry catalog |
 | `qc --help` | Show complete command help |
@@ -214,6 +217,10 @@ qc search pers "李彦宏" --provider qcc \
   --area "广东省 深圳市" \
   --industry "软件和信息技术服务业"
 ```
+
+`qc ent view` accepts the `id` returned by an enterprise search, with an optional `qc/` prefix, reads the QCC firm page's `window.__INITIAL_STATE__` variable, and prints a normalized enterprise object.
+
+The detail object includes the base enterprise fields plus business scope, company type, registration and tax identifiers, operating-term dates, actual capital, industry hierarchy, websites, shareholders, key employees, branches, registration changes, and previous names when QCC provides them.
 
 ## Profiles
 

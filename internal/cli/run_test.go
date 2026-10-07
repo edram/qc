@@ -25,6 +25,9 @@ func TestHelp(t *testing.T) {
 	if !strings.Contains(stdout.String(), "search") {
 		t.Fatalf("help output does not contain search command:\n%s", stdout.String())
 	}
+	if !strings.Contains(stdout.String(), "ent") {
+		t.Fatalf("help output does not contain ent command:\n%s", stdout.String())
+	}
 }
 
 func TestVersion(t *testing.T) {
@@ -194,6 +197,17 @@ func TestCLIConfiguresSelectedProfile(t *testing.T) {
 	}
 	if len(searchCookies) != 1 || searchCookies[0].Name != "session" {
 		t.Fatalf("search cookies = %#v", searchCookies)
+	}
+	enterpriseSearcher, ok := command.Ent.qcc.(*searchQCC)
+	if !ok {
+		t.Fatalf("enterprise QCC searcher = %T", command.Ent.qcc)
+	}
+	enterpriseCookies, err := enterpriseSearcher.api.CookieInfo(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(enterpriseCookies) != 1 || enterpriseCookies[0].Name != "session" {
+		t.Fatalf("enterprise cookies = %#v", enterpriseCookies)
 	}
 }
 

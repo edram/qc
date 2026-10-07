@@ -128,7 +128,7 @@ type qccPersonSearchResponse struct {
 	} `json:"Result"`
 }
 
-func newSearchQCC(profile, userAgent string) search {
+func newSearchQCC(profile, userAgent string) *searchQCC {
 	return &searchQCC{api: qcc.New(qcc.Options{Profile: profile, UserAgent: userAgent})}
 }
 

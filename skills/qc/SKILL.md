@@ -23,6 +23,8 @@ qc
 ├── update
 ├── area list
 ├── industry list
+├── ent
+│   └── view
 └── search
     ├── ents
     └── pers

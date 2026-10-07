@@ -11,6 +11,7 @@ func Execute(args []string, stdout, stderr io.Writer) int {
 	command := New()
 	command.Auth.Import.output = stdout
 	command.Config.Set.UserAgent.output = stdout
+	command.Ent.output = stdout
 	command.Search.output = stdout
 	command.Area.List.output = stdout
 	command.Industry.List.output = stdout

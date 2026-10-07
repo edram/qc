@@ -15,6 +15,7 @@ type CLI struct {
 	UserAgent string           `help:"Browser User-Agent associated with QCC cookies."`
 	Auth      AuthCmd          `kong:"cmd,help='Authentication and cookies.'"`
 	Config    ConfigCmd        `kong:"cmd,help='Profile configuration.'"`
+	Ent       EnterpriseCmd    `kong:"cmd,help='View enterprise details.'"`
 	Search    SearchCmd        `kong:"cmd,help='Search enterprise and person records.'"`
 	Area      AreaCmd          `kong:"cmd,help='Search the local area catalog.'"`
 	Industry  IndustryCmd      `kong:"cmd,help='Search the local industry catalog.'"`
@@ -27,6 +28,7 @@ func New() *CLI {
 		Profile:  defaultProfileName,
 		Auth:     newAuthCmd(defaultProfileName),
 		Config:   newConfigCmd(defaultProfileName),
+		Ent:      newEnterpriseCmd(defaultProfileName, ""),
 		Search:   newSearchCmd(defaultProfileName, ""),
 		Area:     newAreaCmd(),
 		Industry: newIndustryCmd(),
@@ -60,6 +62,7 @@ func (c *CLI) loadProfileConfigFor(ctx *kong.Context) error {
 func (c *CLI) configureProfile() {
 	c.Auth.Import.profile = c.Profile
 	c.Config.Set.UserAgent.profile = c.Profile
+	c.Ent.qcc = newSearchQCC(c.Profile, c.UserAgent)
 	c.Search.qcc = newSearchQCC(c.Profile, c.UserAgent)
 	c.Status.configureProfile(c.Profile, c.UserAgent)
 }

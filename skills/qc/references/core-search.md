@@ -29,6 +29,12 @@ Search by enterprise name:
 qc search ents "百度" --provider qcc
 ```
 
+View one normalized enterprise by the `id` returned from a search:
+
+```console
+qc ent view "qc/3f603703d59a04cb"
+```
+
 Apply QCC page filters:
 
 ```console
@@ -125,6 +131,10 @@ partnerCount, introduction, avatarUrl
 ```
 
 Optional fields are omitted when QCC does not return them. Preserve the JSON output for downstream processing rather than scraping formatted terminal text.
+
+Enterprise view reads the JSON state embedded in the QCC firm page's `window.__INITIAL_STATE__` variable and normalizes its core fields to the provider-independent enterprise model.
+
+The detail model can additionally include business scope, company type, registration and tax identifiers, operating-term dates, actual capital, industry hierarchy, websites, shareholders, key employees, branches, registration changes, and previous names.
 
 ## Key Points
 

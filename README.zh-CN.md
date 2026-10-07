@@ -2,13 +2,14 @@
 
 [English](README.md)
 
-`qc` 是一个面向命令行和自动化脚本的企业信息查询工具。它从本地浏览器同步登录 Cookie，通过企查查搜索企业或人员，并输出结构稳定的 JSON。
+`qc` 是一个面向命令行和自动化脚本的企业信息查询工具。它从本地浏览器同步登录 Cookie，通过企查查搜索企业或人员、按 QCC ID 查询单个企业详情，并输出结构稳定的 JSON。
 
-当前状态：企查查企业搜索和人员搜索可用；爱企查数据源尚未接入。
+当前状态：企查查企业搜索、人员搜索和按 QCC ID 查询详情可用；爱企查数据源尚未接入。
 
 ## 功能
 
 - 按企业名称搜索企业信息
+- 按 QCC ID 查询企业详情
 - 按姓名搜索人员及关联企业信息
 - 将不同数据源的响应转换为统一 JSON 模型
 - 从 Chrome、Brave、Edge、Firefox 或 Safari 同步企查查 Cookie
@@ -79,6 +80,7 @@ go install ./cmd/qc
    ```console
    qc search ents "百度" --provider qcc
    qc search pers "李彦宏" --provider qcc
+   qc ent view "qc/3f603703d59a04cb"
    ```
 
 企业搜索的 JSON 结构示例：
@@ -129,6 +131,7 @@ npx skills@latest add edram/qc --skill qc
 | `qc update` | 下载并安装最新版本 |
 | `qc search ents <query>` | 搜索企业 |
 | `qc search pers <query>` | 搜索人员 |
+| `qc ent view <qc/id>` | 查看标准化企业信息 |
 | `qc area list` | 搜索本地地区目录 |
 | `qc industry list` | 搜索本地行业目录 |
 | `qc --help` | 查看完整命令帮助 |
@@ -214,6 +217,10 @@ qc search pers "李彦宏" --provider qcc \
   --area "广东省 深圳市" \
   --industry "软件和信息技术服务业"
 ```
+
+`qc ent view` 使用企业搜索结果中的 `id`，也接受带 `qc/` 前缀的值，读取企查查企业详情页中的 `window.__INITIAL_STATE__`，并输出标准化企业对象。
+
+详情对象在基础企业字段之外，还会在数据源提供时包含经营范围、企业类型、登记及税务编码、营业期限、实缴资本、行业层级、网站、股东、主要人员、分支机构、变更记录和历史名称。
 
 ## Profile
 
