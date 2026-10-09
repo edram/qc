@@ -71,15 +71,15 @@ func TestSearchQCCEnterprises(t *testing.T) {
 		}
 
 		var request struct {
-			SearchKey   string `json:"searchKey"`
-			PageIndex   int    `json:"pageIndex"`
-			PageSize    int    `json:"pageSize"`
-			SearchIndex string `json:"searchIndex"`
+			SearchKey   string          `json:"searchKey"`
+			PageIndex   int             `json:"pageIndex"`
+			PageSize    int             `json:"pageSize"`
+			SearchIndex json.RawMessage `json:"searchIndex"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 			t.Fatal(err)
 		}
-		if request.SearchKey != `{"onlyname":"百度"}` || request.PageIndex != 1 || request.PageSize != 20 || request.SearchIndex != "multicondition" {
+		if request.SearchKey != "百度" || request.PageIndex != 1 || request.PageSize != 20 || request.SearchIndex != nil {
 			t.Fatalf("request = %#v", request)
 		}
 

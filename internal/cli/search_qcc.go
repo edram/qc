@@ -26,11 +26,10 @@ type searchQCC struct {
 }
 
 type qccEnterpriseSearchRequest struct {
-	SearchKey   string `json:"searchKey"`
-	PageIndex   int    `json:"pageIndex"`
-	PageSize    int    `json:"pageSize"`
-	SearchIndex string `json:"searchIndex"`
-	Filter      string `json:"filter,omitempty"`
+	SearchKey string `json:"searchKey"`
+	PageIndex int    `json:"pageIndex"`
+	PageSize  int    `json:"pageSize"`
+	Filter    string `json:"filter,omitempty"`
 }
 
 type qccEnterpriseSearchResponse struct {
@@ -142,11 +141,10 @@ func (s *searchQCC) SearchEnterprises(ctx context.Context, query string, filter 
 		return models.EnterpriseSearchResult{}, err
 	}
 	request := qccEnterpriseSearchRequest{
-		SearchKey:   searchKey,
-		PageIndex:   1,
-		PageSize:    20,
-		SearchIndex: "multicondition",
-		Filter:      encodedFilter,
+		SearchKey: searchKey,
+		PageIndex: 1,
+		PageSize:  20,
+		Filter:    encodedFilter,
 	}
 
 	var response qccEnterpriseSearchResponse
@@ -382,6 +380,9 @@ func qccEnterpriseSearchKey(query string, fields []enterpriseSearchField) (strin
 			return "", fmt.Errorf("unsupported enterprise match field %q", field)
 		}
 		values[code] = query
+	}
+	if name, ok := values["onlyname"]; ok && len(values) == 1 {
+		return name, nil
 	}
 	data, err := json.Marshal(values)
 	return string(data), err
