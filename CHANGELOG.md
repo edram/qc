@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.5.1
+
+### 🐞 Bug Fixes
+
+- **qcc**: Align enterprise name search requests &nbsp;-&nbsp; by **edram** and **Codex GPT-6** [<samp>(746a4)</samp>](https://github.com/edram/qc/commit/746a486)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/edram/qc/compare/v0.5.0...v0.5.1)
+
 ## v0.5.0
 
 ### 🚀 Features
