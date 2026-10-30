@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/edram/qi/internal/aiqicha"
 	"github.com/edram/qi/internal/qcc"
 	"github.com/steipete/sweetcookie"
 )
@@ -15,7 +16,8 @@ type AuthCmd struct {
 }
 
 type AuthImportCmd struct {
-	Browser string `help:"Browser name (chrome|brave|edge|firefox|safari)."`
+	Provider string `name:"provider" enum:"qcc,aiqicha" default:"qcc" help:"Cookie provider (${enum})."`
+	Browser  string `help:"Browser name (chrome|brave|edge|firefox|safari)."`
 	// BrowserProfile is distinct from the global qc profile: it selects a browser-local profile to read.
 	// Based on: https://github.com/openclaw/spogo/blob/3d4edc230f5ece848b81642e95f3682f3ed3e8d7/internal/cli/auth.go
 	BrowserProfile string `name:"browser-profile" help:"Browser profile name."`
@@ -38,7 +40,11 @@ func (cmd *AuthImportCmd) Run() error {
 	if browser == "" {
 		browser = string(sweetcookie.BrowserChrome)
 	}
-	count, path, err := qcc.ImportBrowserCookies(
+	importCookies := qcc.ImportBrowserCookies
+	if cmd.Provider == "aiqicha" {
+		importCookies = aiqicha.ImportBrowserCookies
+	}
+	count, path, err := importCookies(
 		context.Background(),
 		cmd.profile,
 		sweetcookie.Browser(browser),

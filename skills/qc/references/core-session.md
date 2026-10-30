@@ -36,7 +36,9 @@ Supported browser values are `chrome`, `brave`, `edge`, `firefox`, and `safari`.
 qc auth import --browser chrome --browser-profile "Profile 1"
 ```
 
-Do not infer the User-Agent from the operating system, `curl`, or an HTTP library. A mismatch can rotate `QCCSESSID` and sign the browser out.
+Cookie import defaults to QCC. For Aiqicha, log in at `www.aiqicha.com` and import with `qc auth import --provider aiqicha --browser chrome`. User-Agent configuration is optional. Use the same qc `--profile` for import and search. Aiqicha account status is not implemented; its search command reports login and access failures.
+
+For QCC, do not infer the User-Agent from the operating system, `curl`, or an HTTP library. A mismatch can rotate `QCCSESSID` and sign the browser out.
 
 ### qc profiles
 
@@ -77,7 +79,7 @@ Status reports the active profile, Cookie names and attributes, and the authenti
 
 | Symptom | Action |
 | --- | --- |
-| User-Agent required | Save the exact User-Agent from the logged-in browser, or pass `--user-agent` once |
+| QCC User-Agent required | Save the exact User-Agent from the logged-in browser, or pass `--user-agent` once |
 | No Cookies | Confirm the browser is logged in, then repeat `auth import` with the correct browser and browser profile |
 | Not authenticated | Re-login in the browser, confirm its User-Agent, import again, and rerun `status` |
 | Browser becomes logged out after a request | Treat it as a User-Agent mismatch; re-login before capturing the User-Agent and importing fresh Cookies |
@@ -89,7 +91,7 @@ Cookie import replaces the cache only after the browser read succeeds. A failed 
 
 - Configuration is profile-scoped and shared by data sources; Cookie caches are scoped by both data source and profile.
 - Do not expose files under the qc configuration directory: Cookie caches contain sensitive values even though `qc status` does not show them.
-- Diagnose authentication with `qc status` before retrying a failed search or falling back to raw HTTP.
+- Diagnose QCC authentication with `qc status`; for Aiqicha, follow the search error and re-import Aiqicha Cookies after logging in again.
 
 <!--
 Source references:

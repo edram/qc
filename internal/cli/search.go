@@ -67,7 +67,7 @@ type SearchCmd struct {
 func newSearchCmd(profile, userAgent string) SearchCmd {
 	return SearchCmd{
 		qcc:     newSearchQCC(profile, userAgent),
-		aiqicha: newSearchAiqicha(),
+		aiqicha: newSearchAiqicha(profile, userAgent),
 		output:  io.Discard,
 	}
 }

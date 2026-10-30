@@ -1,11 +1,11 @@
 ---
 name: core-search
-description: Search QCC enterprise and person records with supported filters and JSON output
+description: Search QCC enterprise and person records or Aiqicha enterprise keywords with JSON output
 ---
 
 ## Usage
 
-Enterprise and person searches require a configured User-Agent and imported Cookies. Use `qc status` first when the session is uncertain. The local area and industry catalogs do not require authentication.
+QCC searches require a configured User-Agent and imported Cookies. Aiqicha enterprise searches require Cookies; User-Agent configuration is optional. Use `qc status` to diagnose QCC sessions; Aiqicha account status is not implemented. The local area and industry catalogs do not require authentication.
 
 ### Local catalogs
 
@@ -59,6 +59,17 @@ qc search ents "科技" --provider qcc \
   --area 北京市 --area 上海市 \
   --status active,cancelled
 ```
+
+### Aiqicha enterprises
+
+```console
+qc auth import --provider aiqicha --browser chrome
+qc search ents "百度" --provider aiqicha
+```
+
+Log in at `www.aiqicha.com` before importing Cookies. User-Agent configuration is optional; when provided, the client sends it. Aiqicha returns the first page of up to 10 enterprises and the total match count in the shared JSON model. IDs, dates, capital, and counts are already decoded; do not transform them again.
+
+Aiqicha rejects `--match`, `--area`, `--industry`, and `--status`. People search, enterprise details, account status, and additional pages are not implemented for this provider. On a login-required error, sign in again and repeat `auth import --provider aiqicha` with the same qc profile and browser profile. Do not interpret an authentication or access error as zero matches.
 
 ### People
 
@@ -138,7 +149,7 @@ The detail model can additionally include business scope, company type, registra
 
 ## Key Points
 
-- Pass `--provider qcc` explicitly until Aiqicha search is implemented.
+- Select `--provider qcc` or `--provider aiqicha` explicitly; use QCC for filters, people, and enterprise details.
 - Place global flags before the command: `qc --profile work search ...`.
 - Filter values are current CLI enums or QCC labels; use `qc search ents --help` or `qc search pers --help` before inventing a value.
 - On authentication or login-page responses, stop retrying and follow the session diagnosis workflow.

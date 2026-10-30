@@ -3,73 +3,91 @@ package aiqicha
 import (
 	"context"
 	"io"
-	"net/http"
-	"net/url"
+	nethttp "net/http"
 	"strings"
 	"time"
+
+	"github.com/edram/qi/internal/cookies"
+	"github.com/edram/qi/internal/http"
 )
 
-const defaultHTTPClientTimeout = 10 * time.Second
+const (
+	defaultHTTPClientTimeout = 10 * time.Second
+	defaultBaseURL           = "https://www.aiqicha.com"
+)
 
-// Options configures a client. BaseURL is optional when callers use absolute URLs.
+// Options configures the Aiqicha origin and browser session. UserAgent is an
+// optional header override. CookieSource overrides the per-profile browser-backed cache.
 type Options struct {
-	BaseURL    string
-	HTTPClient *http.Client
-	Timeout    time.Duration
+	BaseURL      string
+	HTTPClient   *nethttp.Client
+	Timeout      time.Duration
+	Profile      string
+	UserAgent    string
+	CookieSource cookies.Source
 }
 
 // Client sends requests to the configured API host.
 type Client struct {
-	baseURL    string
-	httpClient *http.Client
+	baseURL      string
+	httpClient   *http.Client
+	userAgent    string
+	cookieSource cookies.Source
 }
 
 // New returns a client configured for the specified API host.
 func New(options Options) *Client {
-	httpClient := options.HTTPClient
-	if httpClient == nil {
-		timeout := options.Timeout
-		if timeout == 0 {
-			timeout = defaultHTTPClientTimeout
-		}
-		httpClient = &http.Client{Timeout: timeout}
+	if options.BaseURL == "" {
+		options.BaseURL = defaultBaseURL
+	}
+	timeout := options.Timeout
+	if timeout == 0 && options.HTTPClient != nil {
+		timeout = options.HTTPClient.Timeout
+	}
+	if timeout == 0 {
+		timeout = defaultHTTPClientTimeout
+	}
+	source := options.CookieSource
+	if source == nil {
+		source = defaultCookieSource{profile: options.Profile}
 	}
 
-	return &Client{
-		baseURL:    strings.TrimRight(options.BaseURL, "/"),
-		httpClient: httpClient,
+	client := &Client{
+		baseURL: strings.TrimRight(options.BaseURL, "/"),
+		httpClient: http.New(
+			http.WithBaseURL(options.BaseURL),
+			http.WithHTTPClient(options.HTTPClient),
+			http.WithTimeout(timeout),
+			http.WithoutRedirects(),
+		),
+		userAgent:    strings.TrimSpace(options.UserAgent),
+		cookieSource: source,
 	}
+	client.httpClient.AddMiddleware(client.sessionMiddleware)
+	client.httpClient.AddMiddleware(client.responseMiddleware)
+	return client
 }
 
-// Get sends a GET request. The caller must close the response body.
-func (c *Client) Get(ctx context.Context, endpoint string) (*http.Response, error) {
-	return c.request(ctx, http.MethodGet, endpoint, nil)
-}
-
-// Post sends a POST request with body. The caller must close the response body.
-func (c *Client) Post(ctx context.Context, endpoint string, body io.Reader) (*http.Response, error) {
-	return c.request(ctx, http.MethodPost, endpoint, body)
-}
-
-func (c *Client) request(ctx context.Context, method, endpoint string, body io.Reader) (*http.Response, error) {
-	requestURL, err := c.requestURL(endpoint)
+// GetJSON decodes the response's data using Aiqicha's ddw digit substitution.
+func (c *Client) GetJSON(ctx context.Context, endpoint string, result any, options ...http.RequestOption) error {
+	response, err := c.Get(ctx, endpoint, options...)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	request, err := http.NewRequestWithContext(ctx, method, requestURL, body)
-	if err != nil {
-		return nil, err
-	}
-
-	return c.httpClient.Do(request)
+	defer response.Body.Close()
+	return decodeResponse(response.Body, result)
 }
 
-func (c *Client) requestURL(endpoint string) (string, error) {
-	parsed, err := url.Parse(endpoint)
-	if err != nil || parsed.IsAbs() || c.baseURL == "" {
-		return endpoint, err
-	}
+// Get sends a GET request. The caller must close the response body on success.
+func (c *Client) Get(ctx context.Context, endpoint string, options ...http.RequestOption) (*nethttp.Response, error) {
+	return c.request(ctx, nethttp.MethodGet, endpoint, nil, options...)
+}
 
-	return c.baseURL + "/" + strings.TrimLeft(endpoint, "/"), nil
+// Post sends a POST request with body. The caller must close the response body on success.
+func (c *Client) Post(ctx context.Context, endpoint string, body io.Reader, options ...http.RequestOption) (*nethttp.Response, error) {
+	return c.request(ctx, nethttp.MethodPost, endpoint, body, options...)
+}
+
+func (c *Client) request(ctx context.Context, method, endpoint string, body io.Reader, options ...http.RequestOption) (*nethttp.Response, error) {
+	return c.httpClient.WithContext(ctx).Request(method, endpoint, body, options...)
 }

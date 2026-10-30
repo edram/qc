@@ -2,9 +2,9 @@
 
 [简体中文](README.zh-CN.md)
 
-`qc` is a command-line and automation tool for querying Chinese enterprise information. It imports login cookies from a local browser, searches Qichacha (企查查) for enterprises or people, queries one enterprise by its QCC ID, and returns stable JSON.
+`qc` is a command-line and automation tool for querying Chinese enterprise information. It imports login cookies from a local browser, searches Qichacha (企查查) or Aiqicha (爱企查) for enterprises, searches Qichacha for people and enterprise details, and returns stable JSON.
 
-Current status: enterprise and people searches plus QCC ID detail queries through Qichacha are available. The Aiqicha data source is not connected yet.
+Current status: Qichacha supports enterprise searches, people searches, and enterprise details. Aiqicha supports enterprise keyword searches.
 
 ## Features
 
@@ -12,7 +12,7 @@ Current status: enterprise and people searches plus QCC ID detail queries throug
 - Query detailed enterprise information by QCC ID
 - Search people and their associated enterprises by name
 - Convert responses from different data sources into one JSON model
-- Import Qichacha cookies from Chrome, Brave, Edge, Firefox, or Safari
+- Import Qichacha or Aiqicha cookies from Chrome, Brave, Edge, Firefox, or Safari
 - Isolate work and personal login sessions with profiles
 - View cookie metadata and the current Qichacha account without displaying cookie values
 
@@ -107,7 +107,7 @@ Install it from GitHub with the skills CLI:
 npx skills@latest add edram/qc --skill qc
 ```
 
-Before using the skill, install `qc` and complete the [quick start](#quick-start) to save the browser User-Agent and import Cookies.
+Before using the skill, install `qc`. For QCC, complete the [quick start](#quick-start) to save the browser User-Agent and import Cookies.
 
 ### Use the skill
 
@@ -125,7 +125,7 @@ Use qc to search QCC enterprises named 百度 in the active status, then return 
 
 | Command | Description |
 | --- | --- |
-| `qc auth import` | Import Qichacha cookies from a browser |
+| `qc auth import` | Import browser cookies; use `--provider aiqicha` for Aiqicha (default: `qcc`) |
 | `qc config set user-agent <value>` | Save the browser User-Agent for the current profile |
 | `qc status` | Show the current profile, cookie metadata, and account status |
 | `qc update` | Download and install the latest release |
@@ -143,7 +143,16 @@ qc search ents "百度" --provider qcc
 qc search ents "百度" --provider qcc --provider aiqicha
 ```
 
-Aiqicha search is not connected yet, so use `--provider qcc` explicitly for now.
+Select the provider explicitly. Selecting both providers requires a valid session for each.
+
+For Aiqicha, log in at `www.aiqicha.com` and import its cookies. User-Agent configuration is optional:
+
+```console
+qc auth import --provider aiqicha --browser chrome
+qc search ents "百度" --provider aiqicha
+```
+
+Aiqicha returns the first page of up to 10 enterprises and the total match count. It uses the same JSON model as Qichacha and restores encoded IDs, dates, amounts, and counts before returning them. A login or access restriction produces an error instead of an empty result. Aiqicha currently rejects `--match`, `--area`, `--industry`, and `--status`; people search, enterprise details, account status, and additional pages are not implemented for this provider. The filters below apply to Qichacha.
 
 Area catalogs search by name and return the name and provider code:
 
@@ -288,7 +297,8 @@ qc/
 ├── config.work.json
 └── cookies/
     ├── qcc.default.json
-    └── qcc.work.json
+    ├── qcc.work.json
+    └── aiqicha.default.json
 ```
 
 Configuration is separated by profile and shared by all data sources. Cookies are isolated by both data source and profile. Configuration files and cookie caches may contain sensitive information; do not commit or share them publicly.
@@ -304,9 +314,9 @@ qc status
 The output includes:
 
 - The current qc profile
-- Cookie names, domains, paths, expiration times, and security attributes for each data source
+- Qichacha cookie names, domains, paths, expiration times, and security attributes
 - The current Qichacha account status and a masked phone number and email address
-- The status of data sources that are not connected yet
+- A notice for providers whose account status lookup is not implemented
 
 `qc status` does not display cookie values. If Qichacha asks you to log in again, make sure the User-Agent comes from the same browser and browser profile used to import the cookies, then log in again and rerun `qc auth import`.
 

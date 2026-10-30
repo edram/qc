@@ -91,6 +91,43 @@ func TestAuthImportDefaultsToChrome(t *testing.T) {
 	}
 }
 
+func TestAuthImportAiqichaKeepsProviderAndProfileIsolated(t *testing.T) {
+	t.Setenv("QC_HOME", t.TempDir())
+	qccPath, err := sharedcookies.Path("qcc", "work")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := sharedcookies.Write(qccPath, []*http.Cookie{{Name: "QCCSESSID", Value: "existing"}}); err != nil {
+		t.Fatal(err)
+	}
+	restore := sharedcookies.SetReadCookies(func(_ context.Context, options sweetcookie.Options) (sweetcookie.Result, error) {
+		if options.URL != "https://www.aiqicha.com" || len(options.Browsers) != 1 || options.Browsers[0] != sweetcookie.BrowserEdge || options.Profiles[sweetcookie.BrowserEdge] != "Profile 2" {
+			t.Errorf("browser options = %#v", options)
+		}
+		return sweetcookie.Result{Cookies: []sweetcookie.Cookie{{Name: "BDUSS", Value: "test-secret", Domain: ".aiqicha.com", Path: "/"}}}, nil
+	})
+	t.Cleanup(restore)
+	var stdout, stderr bytes.Buffer
+	if code := Execute([]string{"--profile", "work", "auth", "import", "--provider", "aiqicha", "--browser", "edge", "--browser-profile", "Profile 2"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("Execute() = %d: %s", code, stderr.String())
+	}
+	path, err := sharedcookies.Path("aiqicha", "work")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := (sharedcookies.CachedSource{Path: path}).Cookies(context.Background())
+	if err != nil || len(got) != 1 || got[0].Name != "BDUSS" || got[0].Value != "test-secret" {
+		t.Fatalf("aiqicha cache not populated: count %d, error %v", len(got), err)
+	}
+	previous, err := (sharedcookies.CachedSource{Path: qccPath}).Cookies(context.Background())
+	if err != nil || len(previous) != 1 || previous[0].Value != "existing" {
+		t.Fatalf("qcc cache changed: %v", err)
+	}
+	if strings.Contains(stdout.String()+stderr.String(), "test-secret") {
+		t.Fatal("cookie value leaked to output")
+	}
+}
+
 func TestAuthImportFailureKeepsExistingCookiesAndReportsWarning(t *testing.T) {
 	configDir := t.TempDir()
 	t.Setenv("HOME", configDir)

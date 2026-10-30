@@ -2,9 +2,9 @@
 
 [English](README.md)
 
-`qc` 是一个面向命令行和自动化脚本的企业信息查询工具。它从本地浏览器同步登录 Cookie，通过企查查搜索企业或人员、按 QCC ID 查询单个企业详情，并输出结构稳定的 JSON。
+`qc` 是一个面向命令行和自动化脚本的企业信息查询工具。它从本地浏览器同步登录 Cookie，通过企查查或爱企查搜索企业，通过企查查搜索人员和查询企业详情，并输出结构稳定的 JSON。
 
-当前状态：企查查企业搜索、人员搜索和按 QCC ID 查询详情可用；爱企查数据源尚未接入。
+当前状态：企查查支持企业搜索、人员搜索和按 QCC ID 查询详情；爱企查支持企业关键词搜索。
 
 ## 功能
 
@@ -12,7 +12,7 @@
 - 按 QCC ID 查询企业详情
 - 按姓名搜索人员及关联企业信息
 - 将不同数据源的响应转换为统一 JSON 模型
-- 从 Chrome、Brave、Edge、Firefox 或 Safari 同步企查查 Cookie
+- 从 Chrome、Brave、Edge、Firefox 或 Safari 同步企查查或爱企查 Cookie
 - 使用 profile 隔离工作、个人等不同登录会话
 - 查看 Cookie 元数据和当前企查查账号，不输出 Cookie 值
 
@@ -107,7 +107,7 @@ go install ./cmd/qc
 npx skills@latest add edram/qc --skill qc
 ```
 
-使用这个 skill 前，请先安装 `qc`，再按照[快速开始](#快速开始)保存浏览器 User-Agent 并导入 Cookie。
+使用这个 skill 前，请先安装 `qc`。使用企查查时，按照[快速开始](#快速开始)保存浏览器 User-Agent 并导入 Cookie。
 
 ### 使用 skill
 
@@ -125,7 +125,7 @@ npx skills@latest add edram/qc --skill qc
 
 | 命令 | 说明 |
 | --- | --- |
-| `qc auth import` | 从浏览器同步企查查 Cookie |
+| `qc auth import` | 从浏览器同步 Cookie；默认 `qcc`，爱企查使用 `--provider aiqicha` |
 | `qc config set user-agent <value>` | 保存当前 profile 的浏览器 User-Agent |
 | `qc status` | 显示当前 profile、Cookie 元数据和账号状态 |
 | `qc update` | 下载并安装最新版本 |
@@ -143,7 +143,16 @@ qc search ents "百度" --provider qcc
 qc search ents "百度" --provider qcc --provider aiqicha
 ```
 
-爱企查搜索尚未接入，因此当前应显式使用 `--provider qcc`。
+请显式选择数据源。同时选择两个数据源时，需要分别准备有效的登录会话。
+
+使用爱企查时，先在浏览器登录 `www.aiqicha.com`，再导入 Cookie。User-Agent 为可选配置：
+
+```console
+qc auth import --provider aiqicha --browser chrome
+qc search ents "百度" --provider aiqicha
+```
+
+爱企查返回第一页最多 10 家企业及命中总量，使用与企查查一致的 JSON 模型，并自动还原接口编码的企业 ID、日期、金额和数量。登录失效或访问受限时会报错，不会伪装成空结果。当前爱企查不支持 `--match`、`--area`、`--industry`、`--status`，也暂未接入人员搜索、企业详情、账号状态查询和后续分页；下文筛选参数适用于企查查。
 
 地区目录按名称搜索，并返回名称和对应 provider 编码：
 
@@ -288,7 +297,8 @@ qc/
 ├── config.work.json
 └── cookies/
     ├── qcc.default.json
-    └── qcc.work.json
+    ├── qcc.work.json
+    └── aiqicha.default.json
 ```
 
 配置只按 profile 区分，并由所有数据源共享；Cookie 同时按数据源和 profile 隔离。配置文件和 Cookie 缓存可能包含敏感信息，不应提交到版本控制或公开分享。
@@ -304,9 +314,9 @@ qc status
 输出包含：
 
 - 当前 qc profile
-- 各数据源的 Cookie 名称、域名、路径、过期时间和安全属性
+- 企查查 Cookie 的名称、域名、路径、过期时间和安全属性
 - 当前企查查账号状态及脱敏后的手机号、邮箱
-- 尚未接入的数据源状态
+- 尚未接入账号状态查询的数据源提示
 
 `qc status` 不会显示 Cookie 值。如果企查查提示重新登录，请确认 User-Agent 来自导入 Cookie 的同一浏览器和同一浏览器 profile，然后重新登录并再次运行 `qc auth import`。
 

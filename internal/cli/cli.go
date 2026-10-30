@@ -12,7 +12,7 @@ const defaultProfileName = "default"
 type CLI struct {
 	Version   kong.VersionFlag `help:"Print version."`
 	Profile   string           `help:"Authentication profile." env:"QC_PROFILE" default:"default"`
-	UserAgent string           `help:"Browser User-Agent associated with QCC cookies."`
+	UserAgent string           `help:"Browser User-Agent associated with the imported cookies."`
 	Auth      AuthCmd          `kong:"cmd,help='Authentication and cookies.'"`
 	Config    ConfigCmd        `kong:"cmd,help='Profile configuration.'"`
 	Ent       EnterpriseCmd    `kong:"cmd,help='View enterprise details.'"`
@@ -64,5 +64,6 @@ func (c *CLI) configureProfile() {
 	c.Config.Set.UserAgent.profile = c.Profile
 	c.Ent.qcc = newSearchQCC(c.Profile, c.UserAgent)
 	c.Search.qcc = newSearchQCC(c.Profile, c.UserAgent)
+	c.Search.aiqicha = newSearchAiqicha(c.Profile, c.UserAgent)
 	c.Status.configureProfile(c.Profile, c.UserAgent)
 }
