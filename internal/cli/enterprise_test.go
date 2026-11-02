@@ -166,7 +166,7 @@ func TestEnterpriseCommandPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := ctx.Command(); got != "ent view <qc/id>" {
-		t.Fatalf("Command() = %q, want %q", got, "ent view <qc/id>")
+	if got := ctx.Command(); got != "ent view <id>" {
+		t.Fatalf("Command() = %q, want %q", got, "ent view <id>")
 	}
 }

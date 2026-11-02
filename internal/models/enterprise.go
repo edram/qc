@@ -42,7 +42,7 @@ type EnterpriseDetail struct {
 	PreviousNames         []EnterprisePreviousName `json:"previousNames,omitempty"`
 }
 
-// EnterpriseIndustry contains the industry hierarchy returned by QCC.
+// EnterpriseIndustry contains the available industry name and hierarchy.
 type EnterpriseIndustry struct {
 	Code       string `json:"code,omitempty"`
 	Name       string `json:"name,omitempty"`

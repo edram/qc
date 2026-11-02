@@ -9,7 +9,7 @@ metadata:
 Task-oriented reference for the `qc` command-line client. It searches authenticated QCC and Aiqicha data and emits provider-independent JSON for scripts and downstream analysis.
 
 - Use `qc` instead of recreating provider HTTP requests, signatures, or Cookie headers
-- Select `--provider qcc` or `--provider aiqicha` explicitly; Aiqicha supports enterprise keyword searches on the first page without filters
+- Select `--provider qcc` or `--provider aiqicha` explicitly; Aiqicha supports enterprise keyword searches on the first page without filters and mainland enterprise details
 - Keep `--profile` consistent across configuration, Cookie import, status, and search
 - For QCC, use the exact User-Agent from the browser session that supplied the Cookies; never guess or substitute a generic value. User-Agent configuration is optional for Aiqicha
 - Do not print, inspect, or relay Cookie values; `qc status` exposes safe metadata

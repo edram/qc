@@ -2,14 +2,14 @@
 
 [简体中文](README.zh-CN.md)
 
-`qc` is a command-line and automation tool for querying Chinese enterprise information. It imports login cookies from a local browser, searches Qichacha (企查查) or Aiqicha (爱企查) for enterprises, searches Qichacha for people and enterprise details, and returns stable JSON.
+`qc` is a command-line and automation tool for querying Chinese enterprise information. It imports login cookies from a local browser, searches and views enterprises through Qichacha (企查查) or Aiqicha (爱企查), searches Qichacha for people, and returns stable JSON.
 
-Current status: Qichacha supports enterprise searches, people searches, and enterprise details. Aiqicha supports enterprise keyword searches.
+Current status: Qichacha supports enterprise searches, people searches, and enterprise details. Aiqicha supports enterprise keyword searches and mainland enterprise details.
 
 ## Features
 
 - Search enterprise information by company name
-- Query detailed enterprise information by QCC ID
+- Query detailed enterprise information by QCC or Aiqicha ID
 - Search people and their associated enterprises by name
 - Convert responses from different data sources into one JSON model
 - Import Qichacha or Aiqicha cookies from Chrome, Brave, Edge, Firefox, or Safari
@@ -131,7 +131,7 @@ Use qc to search QCC enterprises named 百度 in the active status, then return 
 | `qc update` | Download and install the latest release |
 | `qc search ents <query>` | Search enterprises |
 | `qc search pers <query>` | Search people |
-| `qc ent view <qc/id>` | View one normalized enterprise |
+| `qc ent view <id>` | View one normalized enterprise; use `--provider aiqicha` for Aiqicha (default: `qcc`) |
 | `qc area list` | Search the local area catalog |
 | `qc industry list` | Search the local industry catalog |
 | `qc --help` | Show complete command help |
@@ -150,9 +150,10 @@ For Aiqicha, log in at `www.aiqicha.com` and import its cookies. User-Agent conf
 ```console
 qc auth import --provider aiqicha --browser chrome
 qc search ents "百度" --provider aiqicha
+qc ent view "28783255028393" --provider aiqicha
 ```
 
-Aiqicha returns the first page of up to 10 enterprises and the total match count. It uses the same JSON model as Qichacha and restores encoded IDs, dates, amounts, and counts before returning them. A login or access restriction produces an error instead of an empty result. Aiqicha currently rejects `--match`, `--area`, `--industry`, and `--status`; people search, enterprise details, account status, and additional pages are not implemented for this provider. The filters below apply to Qichacha.
+Aiqicha returns the first page of up to 10 enterprises and the total match count. It uses the same JSON model as Qichacha and restores encoded IDs, dates, amounts, and counts before returning them. A login or access restriction produces an error instead of an empty search result. Aiqicha currently rejects `--match`, `--area`, `--industry`, and `--status`; people search, account status, and additional pages are not implemented for this provider. The filters below apply to Qichacha.
 
 Area catalogs search by name and return the name and provider code:
 
@@ -227,9 +228,11 @@ qc search pers "李彦宏" --provider qcc \
   --industry "软件和信息技术服务业"
 ```
 
-`qc ent view` accepts the `id` returned by an enterprise search, with an optional `qc/` prefix, reads the QCC firm page's `window.__INITIAL_STATE__` variable, and prints a normalized enterprise object.
+`qc ent view` accepts the `id` returned by an enterprise search and prints a normalized enterprise object. It defaults to QCC, which also accepts a `qc/` prefix. Use `--provider aiqicha` with an Aiqicha numeric enterprise ID; Hong Kong enterprise details are not supported.
 
-The detail object includes the base enterprise fields plus business scope, company type, registration and tax identifiers, operating-term dates, actual capital, industry hierarchy, websites, shareholders, key employees, branches, registration changes, and previous names when QCC provides them.
+The QCC detail object includes the base enterprise fields plus business scope, company type, registration and tax identifiers, operating-term dates, actual capital, industry hierarchy, websites, shareholders, key employees, branches, registration changes, and previous names when QCC provides them.
+
+Aiqicha details include available registration information, business scope, company type, operating-term dates, actual capital, industry, shareholders, key employees, and branches. Related lists contain only the first page returned by Aiqicha. Masked values stay masked, and unavailable or restricted fields are omitted; a missing list does not mean there are no records. Websites, registration changes, and previous names are not included for Aiqicha.
 
 ## Profiles
 

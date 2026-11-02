@@ -15,29 +15,43 @@ type enterpriseDetailSearch interface {
 
 // EnterpriseCmd contains commands for viewing one enterprise.
 type EnterpriseCmd struct {
-	View   EnterpriseViewCmd `kong:"cmd,help='View one enterprise.'"`
-	qcc    enterpriseDetailSearch
-	output io.Writer
+	View    EnterpriseViewCmd `kong:"cmd,help='View one enterprise.'"`
+	qcc     enterpriseDetailSearch
+	aiqicha enterpriseDetailSearch
+	output  io.Writer
 }
 
 func newEnterpriseCmd(profile, userAgent string) EnterpriseCmd {
 	return EnterpriseCmd{
-		qcc:    newSearchQCC(profile, userAgent),
-		output: io.Discard,
+		qcc:     newSearchQCC(profile, userAgent),
+		aiqicha: newSearchAiqicha(profile, userAgent),
+		output:  io.Discard,
 	}
 }
 
-// EnterpriseViewCmd prints a normalized enterprise from a QCC firm page.
+// EnterpriseViewCmd prints one normalized enterprise from the selected provider.
 type EnterpriseViewCmd struct {
-	Reference string `arg:"" required:"" name:"qc/id" help:"QCC enterprise ID, optionally prefixed with qc/."`
+	Reference string             `arg:"" required:"" name:"id" help:"Enterprise ID returned by the selected provider (QCC also accepts qc/id)."`
+	Provider  searchProviderName `name:"provider" enum:"qcc,aiqicha" default:"qcc" help:"Enterprise data provider (${enum})."`
 }
 
 func (cmd *EnterpriseViewCmd) Run(enterpriseCmd *EnterpriseCmd) error {
-	id, err := qccEnterpriseReference(cmd.Reference)
-	if err != nil {
-		return err
+	id := strings.TrimSpace(cmd.Reference)
+	var provider enterpriseDetailSearch
+	switch cmd.Provider {
+	case "", searchProviderQCC:
+		var err error
+		id, err = qccEnterpriseReference(id)
+		if err != nil {
+			return err
+		}
+		provider = enterpriseCmd.qcc
+	case searchProviderAiqicha:
+		provider = enterpriseCmd.aiqicha
+	default:
+		return fmt.Errorf("enterprise view: unsupported provider %q", cmd.Provider)
 	}
-	detail, err := enterpriseCmd.qcc.GetEnterpriseDetail(context.Background(), id)
+	detail, err := provider.GetEnterpriseDetail(context.Background(), id)
 	if err != nil {
 		return err
 	}

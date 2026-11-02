@@ -63,6 +63,7 @@ func (c *CLI) configureProfile() {
 	c.Auth.Import.profile = c.Profile
 	c.Config.Set.UserAgent.profile = c.Profile
 	c.Ent.qcc = newSearchQCC(c.Profile, c.UserAgent)
+	c.Ent.aiqicha = newSearchAiqicha(c.Profile, c.UserAgent)
 	c.Search.qcc = newSearchQCC(c.Profile, c.UserAgent)
 	c.Search.aiqicha = newSearchAiqicha(c.Profile, c.UserAgent)
 	c.Status.configureProfile(c.Profile, c.UserAgent)

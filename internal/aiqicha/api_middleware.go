@@ -1,10 +1,13 @@
 package aiqicha
 
 import (
+	"encoding/base64"
 	"fmt"
 	nethttp "net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strconv"
+	"time"
 
 	"github.com/edram/qi/internal/http"
 )
@@ -38,7 +41,14 @@ func (c *Client) sessionMiddleware(ctx *http.Context, next http.Next) error {
 	}
 	if c.userAgent != "" {
 		request.Header.Set("User-Agent", c.userAgent)
+	} else if request.UserAgent() == "" {
+		request.Header.Set("User-Agent", "Go-http-client/1.1")
 	}
+	// The website's request interceptor uses aqc_ssr when its browser signer is
+	// unavailable. It binds the timestamp to the User-Agent actually sent.
+	// https://xinpub.cdn.bcebos.com/aiqicha/static/1793259024/js/vendor.92cf53d085f.js
+	signature := strconv.FormatInt(time.Now().UnixMilli(), 10) + "cal110" + request.UserAgent()
+	request.Header.Set("aqc_ssr", base64.StdEncoding.EncodeToString([]byte(signature)))
 	request.Header.Set("Accept", "application/json, text/plain, */*")
 	request.Header.Set("X-Requested-With", "XMLHttpRequest")
 	return next()

@@ -2,16 +2,52 @@ package aiqicha
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/edram/qi/internal/cookies"
 	clienthttp "github.com/edram/qi/internal/http"
 )
+
+func TestClientSignsRequestsWithEffectiveUserAgent(t *testing.T) {
+	for _, userAgent := range []string{"", "test-browser"} {
+		t.Run(userAgent, func(t *testing.T) {
+			before := time.Now().UnixMilli()
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				signature, err := base64.StdEncoding.DecodeString(r.Header.Get("aqc_ssr"))
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				stamp, ua, ok := strings.Cut(string(signature), "cal110")
+				if !ok || ua != r.UserAgent() || ua == "" {
+					t.Errorf("signature User-Agent = %q, request User-Agent = %q", ua, r.UserAgent())
+				}
+				milliseconds, err := strconv.ParseInt(stamp, 10, 64)
+				if err != nil || milliseconds < before || milliseconds > time.Now().UnixMilli() {
+					t.Errorf("signature timestamp = %q: %v", stamp, err)
+				}
+				if userAgent != "" && r.UserAgent() != userAgent {
+					t.Errorf("User-Agent = %q", r.UserAgent())
+				}
+				fmt.Fprint(w, `{"status":0,"data":{}}`)
+			}))
+			defer server.Close()
+			client := New(Options{BaseURL: server.URL, UserAgent: userAgent, CookieSource: testCookieSource{}})
+			var response any
+			if err := client.GetJSON(context.Background(), "/companies", &response); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
 
 func TestClientGetAndPostWithoutUserAgent(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

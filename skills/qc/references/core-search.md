@@ -1,11 +1,11 @@
 ---
 name: core-search
-description: Search QCC enterprise and person records or Aiqicha enterprise keywords with JSON output
+description: Search enterprises, view enterprise details, and search QCC people with JSON output
 ---
 
 ## Usage
 
-QCC searches require a configured User-Agent and imported Cookies. Aiqicha enterprise searches require Cookies; User-Agent configuration is optional. Use `qc status` to diagnose QCC sessions; Aiqicha account status is not implemented. The local area and industry catalogs do not require authentication.
+QCC queries require a configured User-Agent and imported Cookies. Aiqicha enterprise queries require Cookies; User-Agent configuration is optional. Use `qc status` to diagnose QCC sessions; Aiqicha account status is not implemented. The local area and industry catalogs do not require authentication.
 
 ### Local catalogs
 
@@ -65,11 +65,14 @@ qc search ents "科技" --provider qcc \
 ```console
 qc auth import --provider aiqicha --browser chrome
 qc search ents "百度" --provider aiqicha
+qc ent view "28783255028393" --provider aiqicha
 ```
 
 Log in at `www.aiqicha.com` before importing Cookies. User-Agent configuration is optional; when provided, the client sends it. Aiqicha returns the first page of up to 10 enterprises and the total match count in the shared JSON model. IDs, dates, capital, and counts are already decoded; do not transform them again.
 
-Aiqicha rejects `--match`, `--area`, `--industry`, and `--status`. People search, enterprise details, account status, and additional pages are not implemented for this provider. On a login-required error, sign in again and repeat `auth import --provider aiqicha` with the same qc profile and browser profile. Do not interpret an authentication or access error as zero matches.
+Use the numeric `id` from an Aiqicha search with `ent view --provider aiqicha`. Details include available registration fields, business scope, capital, industry, shareholders, key employees, and branches. Related lists contain only the first page; missing fields or lists may be restricted and must not be treated as zero. Masked values stay masked. Websites, registration changes, previous names, and Hong Kong enterprise details are not included.
+
+Aiqicha rejects `--match`, `--area`, `--industry`, and `--status`. People search, account status, and additional pages are not implemented for this provider. On a login-required error, sign in again and repeat `auth import --provider aiqicha` with the same qc profile and browser profile. Do not interpret an authentication or access error as zero matches.
 
 ### People
 
@@ -149,7 +152,7 @@ The detail model can additionally include business scope, company type, registra
 
 ## Key Points
 
-- Select `--provider qcc` or `--provider aiqicha` explicitly; use QCC for filters, people, and enterprise details.
+- Select `--provider qcc` or `--provider aiqicha` explicitly for enterprise searches and details; use QCC for filters and people.
 - Place global flags before the command: `qc --profile work search ...`.
 - Filter values are current CLI enums or QCC labels; use `qc search ents --help` or `qc search pers --help` before inventing a value.
 - On authentication or login-page responses, stop retrying and follow the session diagnosis workflow.

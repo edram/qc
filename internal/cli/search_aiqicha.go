@@ -20,7 +20,7 @@ type searchAiqicha struct {
 	api *aiqicha.Client
 }
 
-func newSearchAiqicha(profile, userAgent string) search {
+func newSearchAiqicha(profile, userAgent string) *searchAiqicha {
 	return &searchAiqicha{api: aiqicha.New(aiqicha.Options{Profile: profile, UserAgent: userAgent})}
 }
 

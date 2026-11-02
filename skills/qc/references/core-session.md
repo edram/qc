@@ -36,7 +36,7 @@ Supported browser values are `chrome`, `brave`, `edge`, `firefox`, and `safari`.
 qc auth import --browser chrome --browser-profile "Profile 1"
 ```
 
-Cookie import defaults to QCC. For Aiqicha, log in at `www.aiqicha.com` and import with `qc auth import --provider aiqicha --browser chrome`. User-Agent configuration is optional. Use the same qc `--profile` for import and search. Aiqicha account status is not implemented; its search command reports login and access failures.
+Cookie import defaults to QCC. For Aiqicha, log in at `www.aiqicha.com` and import with `qc auth import --provider aiqicha --browser chrome`. User-Agent configuration is optional. Use the same qc `--profile` for import, search, and enterprise details. Aiqicha account status is not implemented; its search and detail commands report login and access failures.
 
 For QCC, do not infer the User-Agent from the operating system, `curl`, or an HTTP library. A mismatch can rotate `QCCSESSID` and sign the browser out.
 
@@ -91,7 +91,7 @@ Cookie import replaces the cache only after the browser read succeeds. A failed 
 
 - Configuration is profile-scoped and shared by data sources; Cookie caches are scoped by both data source and profile.
 - Do not expose files under the qc configuration directory: Cookie caches contain sensitive values even though `qc status` does not show them.
-- Diagnose QCC authentication with `qc status`; for Aiqicha, follow the search error and re-import Aiqicha Cookies after logging in again.
+- Diagnose QCC authentication with `qc status`; for Aiqicha, follow the query error and re-import Aiqicha Cookies after logging in again.
 
 <!--
 Source references:
